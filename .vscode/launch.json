@@ -1,0 +1,41 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Jest",
+      "port": 9229
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Jest E2E Tests",
+      "program": "${workspaceFolder}/sfg-backend/node_modules/jest/bin/jest.js",
+      "args": ["--config", "test/jest-e2e.json"],
+      "cwd": "${workspaceFolder}/sfg-backend",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug NestJS App",
+      "runtimeArgs": [
+        "-r",
+        "tsconfig-paths/register",
+        "-r",
+        "ts-node/register"
+      ],
+      "args": ["${workspaceFolder}/sfg-backend/src/main.ts"],
+      "cwd": "${workspaceFolder}/sfg-backend",
+      "envFile": "${workspaceFolder}/sfg-backend/.env",
+      "sourceMaps": true,
+      "autoAttachChildProcesses": true,
+      "console": "integratedTerminal"
+    }
+  ]
+}

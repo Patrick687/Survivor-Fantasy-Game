@@ -1,0 +1,93 @@
+scalar Date
+
+# type User {
+#   id: ID!
+#   username: String!
+#   email: String!
+# }
+
+type AuthPayload {
+  user: User
+  token: String!
+}
+
+type Query {
+  me: User
+  user(id: ID!): User
+}
+
+type League {
+  id: ID!
+  name: String!
+  seasonId: String!
+  pendingLeagueInvites: [LeagueInvite!]!
+
+  leagueMembers: [LeagueMember!]!
+  leagueOwner: LeagueMember!
+  leagueAdmins: [LeagueMember!]!
+}
+
+type LeagueInvite {
+  invitedUser: User!
+  inviterMember: LeagueMember!
+  status: LeagueInviteStatus!
+  respondedOn: Date
+}
+
+enum LeagueInviteStatus {
+  ACCEPTED
+  PENDING
+  DECLINED
+}
+
+enum LeagueMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+type LeagueMember {
+  id: ID!
+  user: User!
+  userId: String!
+  league: League!
+  leagueId: String!
+  createdAt: String!
+}
+
+type Season {
+  id: String!
+  name: String!
+  startDate: String
+  endDate: String
+}
+
+type Query {
+  getLeague(id: String!): League!
+  getUserLeagues: [League!]!
+
+  getAllSeasons: [Season!]!
+}
+
+type Mutation {
+  register(body: RegisterInput!): AuthPayload
+  login(body: LoginInput!): AuthPayload
+
+  createLeague(body: CreateLeagueInput!): League
+}
+
+input RegisterInput {
+  username: String!
+  password: String!
+  email: String!
+}
+
+input LoginInput {
+  usernameOrEmail: String!
+  password: String!
+}
+
+input CreateLeagueInput {
+  name: String!
+  seasonId: String!
+}
