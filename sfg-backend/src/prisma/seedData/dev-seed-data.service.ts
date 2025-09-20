@@ -13,19 +13,19 @@ export class DevSeedService {
     async seedDevData() {
         await this.seedDevUser(
             { userId: 'devuser1', email: 'devuser1@example.com' },
-            { firstName: 'Alice', lastName: 'Anderson', isPublic: true },
+            { firstName: 'Alice', lastName: 'Anderson', isPublic: true, userName: 'alicea' },
             { hash: 'hashedpassword1' }
         );
 
         await this.seedDevUser(
             { userId: 'devuser2', email: 'devuser2@example.com' },
-            { firstName: 'Bob', lastName: 'Brown', isPublic: false },
+            { firstName: 'Bob', lastName: 'Brown', isPublic: false, userName: 'bobb' },
             { hash: 'hashedpassword2' }
         );
 
         await this.seedDevUser(
             { userId: 'devuser3', email: 'devuser3@example.com' },
-            { firstName: 'Charlie', lastName: 'Clark', isPublic: true },
+            { firstName: 'Charlie', lastName: 'Clark', isPublic: true, userName: 'charliec' },
             { hash: 'hashedpassword3' }
         );
     }
@@ -33,7 +33,7 @@ export class DevSeedService {
 
     async seedDevUser(
         userArgs: { userId: string; email: string; },
-        profileArgs?: { firstName: string; lastName?: string; isPublic?: boolean; },
+        profileArgs?: { firstName: string; lastName?: string; isPublic?: boolean; userName: Profile['userName']; },
         passwordArgs?: { hash: string; }
     ): Promise<{ user: User; profile?: Profile; password?: Password; }> {
         return this.prismaService.$transaction(async (tx) => {
@@ -42,17 +42,18 @@ export class DevSeedService {
             let profile: Profile | undefined;
             if (profileArgs) {
                 profile = await this.tableSeedService.createProfileRecord(tx, {
-                    userId: user.id,
+                    userId: user.userId,
                     firstName: profileArgs.firstName,
                     lastName: profileArgs.lastName,
                     isPublic: profileArgs.isPublic,
+                    userName: profileArgs.userName,
                 });
             }
 
             let password: Password | undefined;
             if (passwordArgs) {
                 password = await this.tableSeedService.createPasswordRecord(tx, {
-                    userId: user.id,
+                    userId: user.userId,
                     hash: passwordArgs.hash,
                 });
             }

@@ -36,15 +36,10 @@ export class TableSeedService {
 
     async createProfileRecord(
         prisma: PrismaService | Prisma.TransactionClient,
-        { userId, firstName, lastName, isPublic = false }: {
-            userId: Profile['userId'],
-            firstName: Profile['firstName'],
-            lastName?: Profile['lastName'],
-            isPublic?: Profile['isPublic'],
-        }
+        { userId, userName, firstName, lastName, isPublic = false }: Prisma.ProfileUncheckedCreateInput
     ) {
         return await prisma.profile.create({
-            data: { userId, firstName, lastName, isPublic }
+            data: { userId, userName, firstName, lastName, isPublic }
         });
     }
 }

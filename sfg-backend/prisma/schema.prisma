@@ -8,8 +8,7 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  userId    String    @unique
+  userId    String    @id @default(uuid())
   email     String    @unique
   profile   Profile?
   passwords Password[]
@@ -19,8 +18,9 @@ model User {
 
 model Profile {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [userId])
   userId    String   @unique
+  userName  String   @unique
   firstName String
   lastName  String?
   isPublic  Boolean  @default(true)
@@ -30,7 +30,7 @@ model Profile {
 
 model Password {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [userId])
   userId    String
   hash      String
   seq       Int
