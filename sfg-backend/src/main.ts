@@ -1,16 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import loadEnvConfig from './config';
-import { GraphQLLoggerInterceptor } from './logger/GraphQLLoggerInterceptor';
+import { SeedAllDataService } from './prisma/seedData/seedAllData.service';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  //app.setGlobalPrefix('api'); // All routes will be prefixed with /api
+  try {
+    const app = await NestFactory.create(AppModule);
 
-  const config = loadEnvConfig();
+    const configService = app.get(ConfigService);
+    const serverPort = configService.getOrThrow<number>('port');
 
-  app.useGlobalInterceptors(new GraphQLLoggerInterceptor());
+    await app.get(SeedAllDataService).runSeed();
 
-  await app.listen(config.port, config.host);
+    await app.listen(serverPort);
+  } catch (error) {
+    console.error('Error during application bootstrap:', error);
+  }
+
 }
 bootstrap();
