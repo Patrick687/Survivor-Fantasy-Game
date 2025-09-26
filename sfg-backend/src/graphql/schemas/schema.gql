@@ -2,6 +2,56 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Profile {
+  id: String!
+  firstName: String!
+  lastName: String
+  isPublic: Boolean!
+  userName: String!
+}
+
+type User {
+  userId: ID!
+  email: String!
+  role: UserRole!
+  profile: Profile!
+}
+
+"""The role of the user in the system"""
+enum UserRole {
+  USER
+  ADMIN
+}
+
+type AuthPayload {
+  user: User!
+  token: String!
+}
+
+type HealthCheckResult {
+  status: String!
+  environment: String!
+  timestamp: String!
+}
+
 type Query {
-  hello: String!
+  healthCheck: HealthCheckResult!
+}
+
+type Mutation {
+  signup(data: SignupDto!): AuthPayload!
+  login(data: LoginDto!): AuthPayload!
+}
+
+input SignupDto {
+  email: String!
+  password: String!
+  userName: String!
+  firstName: String!
+  lastName: String
+}
+
+input LoginDto {
+  userNameOrEmail: String!
+  password: String!
 }

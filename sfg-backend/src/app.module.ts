@@ -4,9 +4,10 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigModule } from '@nestjs/config';
 import { join } from 'path';
 import loadEnvConfig from './config';
-import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SeedDataModule } from './prisma/seedData/seedData.module';
+import { AuthModule } from './auth/auth.module';
+import { AppResolver } from './app.resolver';
 
 @Module({
   imports: [
@@ -26,7 +27,9 @@ import { SeedDataModule } from './prisma/seedData/seedData.module';
     }),
     PrismaModule,
     SeedDataModule,
-    UserModule
+    AuthModule
   ],
+
+  providers: [AppResolver]
 })
 export class AppModule { }

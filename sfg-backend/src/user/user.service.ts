@@ -1,33 +1,118 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { User } from "./user.entity";
-import { PrismaService } from "src/prisma/prisma.service";
-import { UserRepository } from "./user.repository";
-import { Prisma } from "@prisma/client";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { User } from './entities/user.entity';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UserRepository } from './user.repository';
+import {
+  Prisma,
+  Profile,
+  User as UserPrisma,
+  UserRole as UserRolePrisma,
+} from '@prisma/client';
+import { ProfileService } from './profile/profile.service';
+import { PasswordService } from './password/password.service';
+import { UserRole } from './entities/user-role.enum';
+import { UserDomain } from './user.domain';
 
 @Injectable()
 export class UserService {
-    constructor(private readonly prisma: PrismaService,
-        private readonly userRepository: UserRepository
-    ) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userRepository: UserRepository,
+    private readonly profileService: ProfileService,
+    private readonly passwordService: PasswordService,
+  ) {}
 
-    async getUser<K extends keyof User>(field: K, value: User[K]): Promise<User> {
-        const userRecord = await this.userRepository.findUser(field, value);
+  async getUser(where: Prisma.UserWhereUniqueInput): Promise<UserDomain> {
+    const userRecord = await this.userRepository.findUserByUnique(where);
 
-        if (!userRecord) {
-            throw new NotFoundException(`User with ${field}=${value} not found`);
-        }
+    if (!userRecord) {
+      let criteria = '';
+      if (where.userId) criteria = `userId = '${where.userId}'`;
+      else if (where.email) criteria = `email = '${where.email}'`;
+      throw new NotFoundException(`User where ${criteria} not found.`);
+    }
 
+    return {
+      ...userRecord,
+      role: this.mapUserRole(userRecord.role),
+    };
+  }
+
+  private mapUserRole(role: UserRolePrisma): UserRole {
+    switch (role) {
+      case UserRolePrisma.ADMIN:
+        return UserRole.ADMIN;
+      case UserRolePrisma.USER:
+        return UserRole.USER;
+      default:
+        throw new InternalServerErrorException(`Unknown user role: ${role}`);
+    }
+  }
+
+  /**
+   * @param where Criteria to find the profile (e.g., { userId: string } or { userName: string } or { id: string })
+   * @returns The UserDomain associated with the profile
+   * @throws NotFoundException if the profile or user is not found
+   */
+  async getUserByProfile(
+    where: Prisma.ProfileWhereUniqueInput,
+  ): Promise<UserDomain> {
+    const profile = await this.profileService.getProfile(where);
+    return await this.getUser({ userId: profile.userId });
+  }
+
+  async createUser(
+    {
+      userInfo,
+      passwordInfo,
+      profileInfo,
+    }: {
+      userInfo: Prisma.UserCreateInput;
+      passwordInfo: { rawPassword: string };
+      profileInfo: Prisma.ProfileUncheckedCreateWithoutUserInput;
+    },
+    prismaClient: PrismaService | Prisma.TransactionClient = this.prisma,
+  ): Promise<UserDomain> {
+    let userRecord: UserPrisma;
+    if ('$transaction' in prismaClient) {
+      // prismaClient is PrismaService
+      userRecord = await prismaClient.$transaction(async (tx) => {
+        const userRecord = await this.userRepository.createUser(
+          { email: userInfo.email },
+          tx,
+        );
+        await this.profileService.createProfile(
+          { ...profileInfo, userId: userRecord.userId },
+          tx,
+        );
+        await this.passwordService.createPassword(
+          { userId: userRecord.userId, rawPassword: passwordInfo.rawPassword },
+          tx,
+        );
         return userRecord;
+      });
+    } else {
+      const tx = prismaClient;
+      userRecord = await this.userRepository.createUser(
+        { email: userInfo.email },
+        tx,
+      );
+      await this.profileService.createProfile(
+        { ...profileInfo, userId: userRecord.userId },
+        tx,
+      );
+      await this.passwordService.createPassword(
+        { userId: userRecord.userId, rawPassword: passwordInfo.rawPassword },
+        tx,
+      );
     }
 
-    async createUser({ email }: Prisma.UserCreateInput, passwordData: Prisma.PasswordCreateInput, profileData: Prisma.ProfileCreateInput): Promise<User> {
-        await this.prisma.$transaction(async (tx) => {
-            await this.userRepository.createUser({ email }, tx);
-        });
-
-        return await this.getUser('email', email);
-    }
-
-
-
+    return await this.getUser({
+      email: userInfo.email,
+    });
+  }
 }

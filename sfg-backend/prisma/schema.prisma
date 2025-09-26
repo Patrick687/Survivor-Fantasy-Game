@@ -7,11 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
 model User {
   userId    String    @id @default(uuid())
   email     String    @unique
+  role      UserRole  @default(USER)
   profile   Profile?
   passwords Password[]
+  tokens    Token[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -38,4 +45,17 @@ model Password {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, seq])
+}
+
+model Token {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [userId])
+  userId    String
+  token     String   @unique
+  seq       Int
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@unique([userId, seq])
+  @@index([userId])
 }
