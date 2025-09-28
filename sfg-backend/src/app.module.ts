@@ -13,23 +13,23 @@ import { AppResolver } from './app.resolver';
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: 'src/graphql/schemas/schema.gql',
+      autoSchemaFile: 'generated/graphql.ts',
       playground: true,
       definitions: {
         path: join(process.cwd(), 'generated/graphql.ts'),
-        outputAs: 'class'
+        outputAs: 'class',
       },
     }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [loadEnvConfig]
+      load: [loadEnvConfig],
     }),
     PrismaModule,
     SeedDataModule,
-    AuthModule
+    AuthModule,
   ],
 
-  providers: [AppResolver]
+  providers: [AppResolver],
 })
-export class AppModule { }
+export class AppModule {}
