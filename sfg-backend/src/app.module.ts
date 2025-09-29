@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { SeedDataModule } from './prisma/seedData/seedData.module';
 import { AuthModule } from './auth/auth.module';
 import { AppResolver } from './app.resolver';
+import { SeasonModule } from './season/season.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AppResolver } from './app.resolver';
     PrismaModule,
     SeedDataModule,
     AuthModule,
+    SeasonModule,
   ],
 
   providers: [AppResolver],

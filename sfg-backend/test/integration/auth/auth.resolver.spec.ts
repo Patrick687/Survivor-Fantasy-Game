@@ -1,457 +1,304 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import request from 'supertest';
-import { AppModule } from '../../../src/app.module';
+import { INestApplication } from '@nestjs/common';
 import { PrismaService } from '../../../src/prisma/prisma.service';
-import bcrypt from 'bcrypt';
-import { clearDatabase, seedTestUser } from '../utils/prisma.integration.utils';
+import { setupTestApp, teardownTestApp } from '../utils/common/test-app.utils';
+import {
+  runSignupMutation,
+  cleanupTestUser,
+  createUniqueSignupData,
+  createLoginData,
+  runLoginMutation,
+} from '../utils/auth';
+import { create } from 'domain';
 
 describe('AuthResolver (Integration)', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-
-    // Add global validation pipe with transformation enabled
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true, // This enables class-transformer
-        // Remove whitelist and forbidNonWhitelisted to allow optional fields
-      }),
-    );
-
-    prismaService = moduleFixture.get<PrismaService>(PrismaService);
-
-    await app.init();
-  });
-
-  beforeEach(async () => {
-    await clearDatabase(prismaService);
+    const setup = await setupTestApp();
+    app = setup.app;
+    prismaService = setup.prismaService;
   });
 
   afterAll(async () => {
-    await clearDatabase(prismaService);
-    await app.close();
+    await teardownTestApp(app, prismaService);
   });
 
-  describe('signup mutation', () => {
-    it('should successfully signup a new user with complete profile', async () => {
-      const signupMutation = `
-        mutation Signup($data: SignupDto!) {
-          signup(data: $data) {
-            user {
-              userId
-              email
-              role
-              profile {
-                id
-                firstName
-                lastName
-                userName
-                isPublic
-              }
-            }
-            token
-          }
-        }
-      `;
+  describe('signup', () => {
+    it('should return complete auth payload with all nested elements', async () => {
+      const signupData = createUniqueSignupData('complete');
 
-      const signupInput = {
-        email: 'NEWUSER@EXAMPLE.COM', // Test case transformation
-        password: 'TestPassword123!',
-        firstName: 'Test',
-        lastName: 'User', // Optional field - should be allowed
-        userName: 'TESTUSER123', // Test case transformation
-      };
+      const response = await runSignupMutation(
+        app,
+        { prismaService, cleanupInitial: true },
+        signupData,
+      );
 
-      const response = await request(app.getHttpServer())
-        .post('/graphql')
-        .send({
-          query: signupMutation,
-          variables: { data: signupInput },
-        })
-        .expect(200);
-
-      // Assert response structure
       expect(response.body.errors).toBeUndefined();
-      expect(response.body.data.signup).toBeDefined();
 
-      const { user, token } = response.body.data.signup;
+      const authPayload = response.body.data.signup;
 
-      // Validate user data
-      expect(user).toMatchObject({
-        userId: expect.any(String),
-        email: 'newuser@example.com', // Should be lowercase after transformation0000000000
-        role: 'USER',
-      });
-
-      // Validate profile data
-      expect(user.profile).toMatchObject({
-        id: expect.any(String),
-        firstName: 'Test',
-        lastName: 'User',
-        userName: 'testuser123', // Should be lowercase
-        isPublic: true,
-      });
-
-      // Validate token
-      expect(token).toBeDefined();
-      expect(typeof token).toBe('string');
-      expect(token.length).toBeGreaterThan(0);
-
-      // Verify user was created in database with correct data
-      const createdUser = await prismaService.user.findUnique({
-        where: { email: 'newuser@example.com' },
-        include: { profile: true },
-      });
-
-      if (!createdUser) {
-        fail('User was not in the database');
-      }
-
-      expect(createdUser).toBeDefined();
-      expect(createdUser.email).toBe('newuser@example.com');
-      expect(createdUser.role).toBe('USER');
-
-      // Verify profile was created correctly
-      expect(createdUser.profile).toMatchObject({
-        firstName: 'Test',
-        lastName: 'User',
-        userName: 'testuser123', // Should be lowercase in DB
-        isPublic: true,
-      });
-
-      // Verify password was hashed (not stored as plain text)
-      const passwordRecord = await prismaService.password.findFirst({
-        where: { userId: createdUser.userId },
-      });
-
-      if (!passwordRecord) {
-        fail('Password record was not in the database');
-      }
-
-      expect(passwordRecord).toBeDefined();
-      await bcrypt
-        .compare('TestPassword123!', passwordRecord.hash)
-        .then((isMatch) => {
-          expect(isMatch).toBe(true);
-        });
-      expect(passwordRecord?.hash).not.toBe('TestPassword123!');
-
-      // Verify token was stored in database
-      const tokenRecord = await prismaService.token.findFirst({
-        where: { userId: createdUser.userId },
-        orderBy: { createdAt: 'desc' },
-      });
-
-      if (!tokenRecord) {
-        fail('Token record was not in the database');
-      }
-
-      expect(tokenRecord).toBeDefined();
-      expect(tokenRecord.token).toBe(token);
-    });
-
-    it('should fail to signup user if email already exists', async () => {
-      // Arrange - Create a user first
-      const existingUserData = {
-        email: 'existing@example.com',
-        password: 'TestPassword123!',
-        firstName: 'Existing',
-        lastName: 'User',
-        userName: 'existinguser',
-      };
-
-      await seedTestUser(prismaService, existingUserData);
-
-      const signupMutation = `
-    mutation Signup($data: SignupDto!) {
-      signup(data: $data) {
-        user {
-          userId
-          email
-          role
-        }
-        token
-      }
-    }
-  `;
-
-      const signupInput = {
-        email: 'EXISTING@EXAMPLE.COM', // Same email, different case
-        password: 'AnotherPassword123!',
-        firstName: 'Another',
-        lastName: 'User',
-        userName: 'anotheruser',
-      };
-
-      // Act
-      const response = await request(app.getHttpServer())
-        .post('/graphql')
-        .send({
-          query: signupMutation,
-          variables: { data: signupInput },
-        });
-
-      // Assert
-      expect(response.status).toBe(200);
-      expect(response.body.errors).toBeDefined();
-      expect(response.body.errors).toHaveLength(1);
-      expect(response.body.errors[0]).toMatchObject({
-        message: expect.stringContaining(
-          'Unique constraint failed on the fields: (`email`)',
-        ),
-        extensions: {
-          code: expect.any(String),
+      expect(authPayload).toEqual({
+        user: {
+          userId: expect.any(String),
+          email: signupData.email.toLowerCase(),
+          role: 'USER',
+          profile: {
+            id: expect.any(String),
+            firstName: signupData.firstName,
+            lastName: signupData.lastName,
+            userName: signupData.userName.toLowerCase(),
+            isPublic: true,
+          },
         },
+        token: expect.any(String),
       });
-      expect(response.body.data).toBeNull();
 
-      // Verify no additional user was created
-      const userCount = await prismaService.user.count({
-        where: { email: 'existing@example.com' },
-      });
-      expect(userCount).toBe(1); // Should still be just the original user
+      expect(authPayload.user.userId).toBeDefined();
+      expect(authPayload.user.profile.id).toBeDefined();
+      expect(authPayload.token).toBeDefined();
+
+      await cleanupTestUser(prismaService, signupData.email);
     });
 
-    it('should fail to signup user if userName already exists', async () => {
-      // Arrange - Create a user first
-      const existingUserData = {
-        email: 'first@example.com',
-        password: 'TestPassword123!',
-        firstName: 'First',
-        lastName: 'User',
-        userName: 'duplicateusername',
-      };
+    it('should successfully create user and save to database', async () => {
+      const signupData = createUniqueSignupData('signup');
 
-      await seedTestUser(prismaService, existingUserData);
+      const response = await runSignupMutation(
+        app,
+        { prismaService },
+        signupData,
+      );
 
-      const signupMutation = `
-    mutation Signup($data: SignupDto!) {
-      signup(data: $data) {
-        user {
-          userId
-          email
-          role
-        }
-        token
-      }
-    }
-  `;
-
-      const signupInput = {
-        email: 'second@example.com', // Different email
-        password: 'AnotherPassword123!',
-        firstName: 'Second',
-        lastName: 'User',
-        userName: 'DUPLICATEUSERNAME', // Same username, different case
-      };
-
-      // Act
-      const response = await request(app.getHttpServer())
-        .post('/graphql')
-        .send({
-          query: signupMutation,
-          variables: { data: signupInput },
-        });
-
-      // Assert
-      expect(response.status).toBe(200);
-      expect(response.body.errors).toBeDefined();
-      expect(response.body.errors).toHaveLength(1);
-      expect(response.body.errors[0]).toMatchObject({
-        message: expect.stringContaining(
-          'Unique constraint failed on the fields: (`userName`)',
-        ),
-        extensions: {
-          code: expect.any(String),
-        },
-      });
-      expect(response.body.data).toBeNull();
-
-      // Verify no additional user was created with that username
-      const profileCount = await prismaService.profile.count({
-        where: { userName: 'duplicateusername' },
-      });
-      expect(profileCount).toBe(1); // Should still be just the original profile
-
-      // Verify the second email wasn't created at all
-      const secondUser = await prismaService.user.findUnique({
-        where: { email: 'second@example.com' },
-      });
-      expect(secondUser).toBeNull();
-    });
-  });
-  describe('login mutation', () => {
-    it('should successfully login an existing user and return profile', async () => {
-      // Arrange - Create a test user first
-      const testUserData = {
-        email: 'LOGINTEST@EXAMPLE.COM', // Test case handling
-        password: 'TestPassword123!',
-        firstName: 'Login',
-        lastName: 'Test',
-        userName: 'LOGINTEST123', // Test case handling
-      };
-
-      await seedTestUser(prismaService, testUserData);
-
-      const loginMutation = `
-        mutation Login($data: LoginDto!) {
-          login(data: $data) {
-            user {
-              userId
-              email
-              role
-              profile {
-                id
-                firstName
-                lastName
-                userName
-                isPublic
-              }
-            }
-            token
-          }
-        }
-      `;
-
-      const loginInput = {
-        userNameOrEmail: 'LOGINTEST@EXAMPLE.COM', // Test case insensitive login
-        password: 'TestPassword123!',
-      };
-
-      // Act
-      const response = await request(app.getHttpServer())
-        .post('/graphql')
-        .send({
-          query: loginMutation,
-          variables: { data: loginInput },
-        })
-        .expect(200);
-
-      // Assert response structure
       expect(response.body.errors).toBeUndefined();
-      expect(response.body.data.login).toBeDefined();
+      expect(response.body.data.signup.user.email).toBe(
+        signupData.email.toLowerCase(),
+      );
+      expect(response.body.data.signup.token).toBeDefined();
 
-      const { user, token } = response.body.data.login;
-
-      // Validate user data
-      expect(user).toMatchObject({
-        userId: expect.any(String),
-        email: 'logintest@example.com', // Should be lowercase
-        role: 'USER',
-      });
-
-      // Validate profile data
-      expect(user.profile).toMatchObject({
-        id: expect.any(String),
-        firstName: 'Login',
-        lastName: 'Test',
-        userName: 'logintest123', // Should be lowercase
-        isPublic: true,
-      });
-
-      // Validate token
-      expect(token).toBeDefined();
-      expect(typeof token).toBe('string');
-
-      // Verify token was created in database
       const dbUser = await prismaService.user.findUnique({
-        where: { email: 'logintest@example.com' },
+        where: { email: signupData.email.toLowerCase() },
         include: { profile: true },
       });
 
-      if (!dbUser) {
-        fail('User was not in the database after login');
-      }
+      expect(dbUser).toBeDefined();
+      expect(dbUser!.profile).toBeDefined();
+      expect(dbUser!.email).toBe(signupData.email.toLowerCase());
+      expect(dbUser!.profile!.userName).toBe(signupData.userName.toLowerCase());
 
-      const tokenRecord = await prismaService.token.findFirst({
-        where: { userId: dbUser.userId },
-        orderBy: { createdAt: 'desc' },
-      });
-
-      if (!tokenRecord) {
-        fail('Token record was not in the database after login');
-      }
-
-      expect(tokenRecord).toBeDefined();
-      expect(tokenRecord.token).toBe(token);
+      await cleanupTestUser(prismaService, signupData.email);
     });
 
-    it('should successfully login with username and return complete profile', async () => {
-      // Arrange - Create a test user first
-      const testUserData = {
-        email: 'usernametest@example.com',
-        password: 'TestPassword123!',
-        firstName: 'Username',
-        lastName: 'Test',
-        userName: 'usernametest123',
+    it('should fail when email already exists', async () => {
+      const signupData = createUniqueSignupData('original');
+
+      await runSignupMutation(app, { prismaService }, signupData);
+
+      const duplicateEmailSignupData = {
+        ...createUniqueSignupData('duplicate'),
+        email: signupData.email,
       };
 
-      await seedTestUser(prismaService, testUserData);
+      const duplicateResponse = await runSignupMutation(
+        app,
+        { prismaService, cleanupAfter: false, cleanupInitial: false },
+        duplicateEmailSignupData,
+      );
 
-      const loginMutation = `
-        mutation Login($data: LoginDto!) {
-          login(data: $data) {
-            user {
-              userId
-              email
-              role
-              profile {
-                id
-                firstName
-                lastName
-                userName
-                isPublic
-              }
-            }
-            token
-          }
-        }
-      `;
+      expect(duplicateResponse.body.errors).toBeDefined();
+      expect(duplicateResponse.body.errors).toHaveLength(1);
 
-      const loginInput = {
-        userNameOrEmail: 'USERNAMETEST123', // Using uppercase username to test case handling
-        password: 'TestPassword123!',
-      };
+      const error = duplicateResponse.body.errors[0];
+      expect(error.message).toContain('already exists');
+      expect(duplicateResponse.body.data).toBeNull();
 
-      // Act
-      const response = await request(app.getHttpServer())
-        .post('/graphql')
-        .send({
-          query: loginMutation,
-          variables: { data: loginInput },
-        })
-        .expect(200);
+      await cleanupTestUser(prismaService, signupData.email);
+    });
 
-      // Assert
+    it('should fail when username already exists', async () => {
+      const firstUser = createUniqueSignupData('first');
+      const secondUser = createUniqueSignupData('second');
+      secondUser.userName = firstUser.userName;
+
+      await runSignupMutation(
+        app,
+        { prismaService, cleanupInitial: true, cleanupAfter: false },
+        firstUser,
+      );
+
+      const response = await runSignupMutation(
+        app,
+        { prismaService },
+        secondUser,
+      );
+
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors[0].message).toContain('username');
+      expect(response.body.errors[0].message).toContain('already exists');
+      expect(response.body.data).toBeNull();
+
+      await cleanupTestUser(prismaService, firstUser.email);
+    });
+  });
+
+  describe('login', () => {
+    it('should login existing user with email and return auth payload', async () => {
+      // Create a user first
+      const signupData = createUniqueSignupData('loginByEmail');
+
+      await runSignupMutation(
+        app,
+        { prismaService, cleanupInitial: true },
+        signupData,
+      );
+
+      // Login with email
+      const loginData = createLoginData(signupData.email, signupData.password);
+
+      const response = await runLoginMutation(app, loginData);
+
       expect(response.body.errors).toBeUndefined();
-      expect(response.body.data.login).toBeDefined();
 
-      const { user, token } = response.body.data.login;
+      const authPayload = response.body.data.login;
 
-      // Validate user found by username
-      expect(user).toMatchObject({
-        userId: expect.any(String),
-        email: 'usernametest@example.com',
-        role: 'USER',
+      expect(authPayload).toEqual({
+        user: {
+          userId: expect.any(String),
+          email: signupData.email.toLowerCase(),
+          role: 'USER',
+          profile: {
+            id: expect.any(String),
+            firstName: signupData.firstName,
+            lastName: signupData.lastName,
+            userName: signupData.userName.toLowerCase(),
+            isPublic: true,
+          },
+        },
+        token: expect.any(String),
       });
 
-      // Validate complete profile data
-      expect(user.profile).toMatchObject({
-        id: expect.any(String),
-        firstName: 'Username',
-        lastName: 'Test',
-        userName: 'usernametest123',
-        isPublic: true,
+      expect(authPayload.user.userId).toBeDefined();
+      expect(authPayload.user.profile.id).toBeDefined();
+      expect(authPayload.token).toBeDefined();
+
+      await cleanupTestUser(prismaService, signupData.email);
+    });
+
+    it('should login existing user with username and return auth payload', async () => {
+      // Create a user first
+      const signupData = createUniqueSignupData('loginByUsername');
+
+      await runSignupMutation(
+        app,
+        { prismaService, cleanupInitial: true },
+        signupData,
+      );
+
+      // Login with username
+      const loginData = createLoginData(
+        signupData.userName,
+        signupData.password,
+      );
+
+      const response = await runLoginMutation(app, loginData);
+
+      expect(response.body.errors).toBeUndefined();
+
+      const authPayload = response.body.data.login;
+
+      expect(authPayload).toEqual({
+        user: {
+          userId: expect.any(String),
+          email: signupData.email.toLowerCase(),
+          role: 'USER',
+          profile: {
+            id: expect.any(String),
+            firstName: signupData.firstName,
+            lastName: signupData.lastName,
+            userName: signupData.userName.toLowerCase(),
+            isPublic: true,
+          },
+        },
+        token: expect.any(String),
       });
 
-      expect(token).toBeDefined();
+      expect(authPayload.user.userId).toBeDefined();
+      expect(authPayload.user.profile.id).toBeDefined();
+      expect(authPayload.token).toBeDefined();
+
+      await cleanupTestUser(prismaService, signupData.email);
+    });
+
+    it('should fail login with incorrect password', async () => {
+      // Create a user first
+      const signupData = createUniqueSignupData('wrongPassword');
+
+      await runSignupMutation(
+        app,
+        { prismaService, cleanupInitial: true },
+        signupData,
+      );
+
+      // Login with wrong password
+      const loginData = createLoginData(signupData.email, 'WrongPassword123!');
+
+      const response = await runLoginMutation(app, loginData);
+
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors).toHaveLength(1);
+
+      const error = response.body.errors[0];
+      expect(error.message).toContain('Invalid credentials');
+      expect(error.extensions.code).toBe('INTERNAL_SERVER_ERROR');
+      expect(error.extensions.status).toBe(401);
+      expect(error.extensions.originalError.error).toBe('Unauthorized');
+      expect(error.extensions.originalError.statusCode).toBe(401);
+
+      expect(response.body.data).toBeNull();
+
+      await cleanupTestUser(prismaService, signupData.email);
+    });
+
+    it('should fail login for non-existent username', async () => {
+      const loginData = createLoginData(
+        'nonexistentuser123',
+        'SomePassword123!',
+      );
+
+      const response = await runLoginMutation(app, loginData);
+
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors).toHaveLength(1);
+
+      const error = response.body.errors[0];
+      expect(error.message).toContain('Invalid credentials');
+      expect(error.extensions.code).toBe('INTERNAL_SERVER_ERROR');
+      expect(error.extensions.status).toBe(401);
+      expect(error.extensions.originalError.error).toBe('Unauthorized');
+      expect(error.extensions.originalError.statusCode).toBe(401);
+
+      expect(response.body.data).toBeNull();
+    });
+
+    it('should fail login for non-existent email', async () => {
+      const loginData = createLoginData(
+        'nonexistent@test.com',
+        'SomePassword123!',
+      );
+
+      const response = await runLoginMutation(app, loginData);
+
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors).toHaveLength(1);
+
+      const error = response.body.errors[0];
+      expect(error.message).toContain('Invalid credentials');
+      expect(error.extensions.code).toBe('INTERNAL_SERVER_ERROR');
+      expect(error.extensions.status).toBe(401);
+      expect(error.extensions.originalError.error).toBe('Unauthorized');
+      expect(error.extensions.originalError.statusCode).toBe(401);
+
+      expect(response.body.data).toBeNull();
     });
   });
 });

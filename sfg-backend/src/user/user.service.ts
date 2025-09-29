@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -16,6 +17,7 @@ import { ProfileService } from './profile/profile.service';
 import { PasswordService } from './password/password.service';
 import { UserRole } from './entities/user-role.enum';
 import { UserDomain } from './user.domain';
+import { ProfileRepository } from './profile/profile.repository';
 
 @Injectable()
 export class UserService {
@@ -77,6 +79,26 @@ export class UserService {
     },
     prismaClient: PrismaService | Prisma.TransactionClient = this.prisma,
   ): Promise<UserDomain> {
+    const existingUserRecord = await this.userRepository.findUserByUnique({
+      email: userInfo.email,
+    });
+    if (existingUserRecord) {
+      throw new ConflictException(
+        `User with email '${userInfo.email}' already exists.`,
+      );
+    }
+
+    const existingProfileRecord = await this.profileService
+      .getProfile({
+        userName: profileInfo.userName,
+      })
+      .catch((err) => null);
+    if (existingProfileRecord) {
+      throw new ConflictException(
+        `User with username '${profileInfo.userName}' already exists.`,
+      );
+    }
+
     let userRecord: UserPrisma;
     if ('$transaction' in prismaClient) {
       // prismaClient is PrismaService

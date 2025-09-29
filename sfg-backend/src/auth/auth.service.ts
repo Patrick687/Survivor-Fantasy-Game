@@ -25,27 +25,32 @@ export class AuthService {
     userName,
     lastName,
   }: SignupDto): Promise<AuthPayloadDomain> {
-    this.logger.debug(`🚀 Starting signup for email: ${email}`);
+    try {
+      this.logger.debug(`🚀 Starting signup for email: ${email}`);
 
-    const user = await this.userService.createUser({
-      userInfo: { email },
-      passwordInfo: { rawPassword: password },
-      profileInfo: { firstName, lastName, userName },
-    });
+      const user = await this.userService.createUser({
+        userInfo: { email },
+        passwordInfo: { rawPassword: password },
+        profileInfo: { firstName, lastName, userName },
+      });
 
-    this.logger.debug(`✅ User created successfully: ${user.userId}`);
+      this.logger.debug(`✅ User created successfully: ${user.userId}`);
 
-    const token = await this.tokenService.issueTokenForUser(
-      user.userId,
-      user.role,
-    );
+      const token = await this.tokenService.issueTokenForUser(
+        user.userId,
+        user.role,
+      );
 
-    this.logger.debug(`🎫 Token generated for user: ${user.userId}`);
+      this.logger.debug(`🎫 Token generated for user: ${user.userId}`);
 
-    return {
-      user,
-      token: token.token,
-    };
+      return {
+        user,
+        token: token.token,
+      };
+    } catch (error) {
+      this.logger.error(`❌ Signup failed for email: ${email}`, error.stack);
+      throw error;
+    }
   }
 
   async login({
@@ -63,10 +68,10 @@ export class AuthService {
         `✅ Found user by email: ${user.email} (ID: ${user.userId})`,
       );
     } catch (emailError) {
-      this.logger.debug(`❌ Email lookup failed: ${emailError.message}`);
+      this.logger.debug(`⚠️ Email lookup failed: ${emailError.message}`);
 
       try {
-        this.logger.debug('👤 Trying username lookup...');
+        this.logger.debug('📧 Trying username lookup...');
         user = await this.userService.getUserByProfile({
           userName: userNameOrEmail,
         });
@@ -74,11 +79,12 @@ export class AuthService {
           `✅ Found user by username: ${userNameOrEmail} (ID: ${user.userId})`,
         );
       } catch (usernameError) {
-        this.logger.warn(
+        this.logger.debug(
+          `⚠️ Username lookup failed: ${usernameError.message}`,
+        );
+        this.logger.debug(
           `❌ Both email and username lookup failed for: ${userNameOrEmail}`,
         );
-        this.logger.debug(`Email error: ${emailError.message}`);
-        this.logger.debug(`Username error: ${usernameError.message}`);
         throw new UnauthorizedException('Invalid credentials.');
       }
     }

@@ -25,7 +25,7 @@ model User {
 
 model Profile {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [userId])
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   userId    String   @unique
   userName  String   @unique
   firstName String
@@ -37,7 +37,7 @@ model Profile {
 
 model Password {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [userId])
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   userId    String
   hash      String
   seq       Int
@@ -49,7 +49,7 @@ model Password {
 
 model Token {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [userId])
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   userId    String
   token     String   @unique
   seq       Int
@@ -58,4 +58,11 @@ model Token {
 
   @@unique([userId, seq])
   @@index([userId])
+}
+
+model Season {
+  seasonId  Int   @id
+  filmingLocation String?
+  airStartDate DateTime?
+  airEndDate DateTime?
 }
