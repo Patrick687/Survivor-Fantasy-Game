@@ -6,10 +6,10 @@ import {
   Logger,
 } from '@nestjs/common';
 import { SeasonRepository } from './season.repository';
-import { SeasonDomain } from './season.domain';
 import { CreateSeasonDto } from './dto/create-season.dto';
 import { UpdateSeasonDto } from './dto/update-season.dto';
 import { Season } from '@prisma/client';
+import { SeasonEntity } from './season.entity';
 
 @Injectable()
 export class SeasonService {
@@ -18,13 +18,13 @@ export class SeasonService {
   constructor(private readonly seasonRepository: SeasonRepository) {}
 
   // READ Operations
-  async getAllSeasons(): Promise<SeasonDomain[]> {
+  async getAllSeasons(): Promise<SeasonEntity[]> {
     this.logger.debug('Fetching all seasons');
     const seasons = await this.seasonRepository.findAllSeasons();
-    return seasons.map((season) => this.mapToDomain(season));
+    return seasons;
   }
 
-  async getSeasonById(seasonId: number): Promise<SeasonDomain> {
+  async getSeasonById(seasonId: number): Promise<SeasonEntity> {
     this.logger.debug(`Fetching season with ID: ${seasonId}`);
 
     const season = await this.seasonRepository.findSeasonById(seasonId);
@@ -32,10 +32,10 @@ export class SeasonService {
       throw new NotFoundException(`Season with ID ${seasonId} not found`);
     }
 
-    return this.mapToDomain(season);
+    return season;
   }
 
-  async getCurrentSeason(): Promise<SeasonDomain | null> {
+  async getCurrentSeason(): Promise<SeasonEntity | null> {
     this.logger.debug('Fetching current season');
     const now = new Date();
 
@@ -47,13 +47,11 @@ export class SeasonService {
     if (seasons.length === 0) {
       return null;
     }
-
-    // Return the first current season (or you could add logic to handle multiple)
-    return this.mapToDomain(seasons[0]);
+    return seasons[0];
   }
 
   // CREATE Operations
-  async createSeason(createSeasonDto: CreateSeasonDto): Promise<SeasonDomain> {
+  async createSeason(createSeasonDto: CreateSeasonDto): Promise<SeasonEntity> {
     this.logger.debug(
       `Creating new season: ${JSON.stringify(createSeasonDto)}`,
     );
@@ -81,14 +79,14 @@ export class SeasonService {
     const season = await this.seasonRepository.createSeason(seasonData);
     this.logger.log(`Season created successfully with ID: ${season.seasonId}`);
 
-    return this.mapToDomain(season);
+    return season;
   }
 
   // UPDATE Operations
   async updateSeason(
     seasonId: number,
     updateSeasonDto: UpdateSeasonDto,
-  ): Promise<SeasonDomain> {
+  ): Promise<SeasonEntity> {
     this.logger.debug(
       `Updating season ${seasonId}: ${JSON.stringify(updateSeasonDto)}`,
     );
@@ -125,7 +123,7 @@ export class SeasonService {
     );
     this.logger.log(`Season ${seasonId} updated successfully`);
 
-    return this.mapToDomain(updatedSeason);
+    return updatedSeason;
   }
 
   // DELETE Operations
@@ -144,7 +142,7 @@ export class SeasonService {
   }
 
   private validateUpdateDates(
-    existingSeason: SeasonDomain,
+    existingSeason: SeasonEntity,
     updateDto: UpdateSeasonDto,
   ): void {
     const isUpdatingStartDate = updateDto.airStartDate !== undefined;
@@ -214,15 +212,5 @@ export class SeasonService {
         );
       }
     }
-  }
-
-  // Domain mapping method
-  private mapToDomain(season: Season): SeasonDomain {
-    return new SeasonDomain(
-      season.seasonId,
-      season.filmingLocation,
-      season.airStartDate,
-      season.airEndDate,
-    );
   }
 }

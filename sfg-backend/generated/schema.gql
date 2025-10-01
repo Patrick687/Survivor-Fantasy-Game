@@ -1,0 +1,117 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  userId: ID!
+  email: String!
+  role: UserRole!
+  profile: Profile!
+}
+
+"""The role of the user in the system"""
+enum UserRole {
+  USER
+  ADMIN
+}
+
+type AuthPayload {
+  user: User!
+  token: String!
+}
+
+type Profile {
+  id: String!
+  firstName: String!
+  lastName: String
+  isPublic: Boolean!
+  userName: String!
+}
+
+type HealthCheckResult {
+  status: String!
+  environment: String!
+  timestamp: String!
+}
+
+type SeasonEntity {
+  seasonId: Int!
+  filmingLocation: String
+  airStartDate: DateTime
+  airEndDate: DateTime
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type LeagueEntity {
+  leagueId: ID!
+  leagueName: String!
+  createdAt: DateTime!
+  season: SeasonEntity!
+  createdBy: LeagueMemberEntity!
+}
+
+type LeagueMemberEntity {
+  id: String!
+  role: LeagueMemberRole!
+  user: User!
+  league: LeagueEntity!
+}
+
+"""The role of a member within a league"""
+enum LeagueMemberRole {
+  ADMIN
+  MEMBER
+  OWNER
+}
+
+type Query {
+  healthCheck: HealthCheckResult!
+  getAllSeasons: [SeasonEntity!]!
+  getSeason(seasonId: Int!): SeasonEntity!
+  getCurrentSeason: SeasonEntity
+  getMyLeagues: [LeagueEntity!]!
+}
+
+type Mutation {
+  signup(data: SignupDto!): AuthPayload!
+  login(data: LoginDto!): AuthPayload!
+  createSeason(input: CreateSeasonDto!): SeasonEntity!
+  updateSeason(seasonId: Int!, input: UpdateSeasonDto!): SeasonEntity!
+  deleteSeason(seasonId: Int!): Boolean!
+  createLeague(input: CreateLeagueDto!): LeagueEntity!
+}
+
+input SignupDto {
+  email: String!
+  password: String!
+  userName: String!
+  firstName: String!
+  lastName: String
+}
+
+input LoginDto {
+  userNameOrEmail: String!
+  password: String!
+}
+
+input CreateSeasonDto {
+  seasonId: Int!
+  filmingLocation: String
+  airStartDate: String
+  airEndDate: String
+}
+
+input UpdateSeasonDto {
+  filmingLocation: String
+  airStartDate: String
+  airEndDate: String
+}
+
+input CreateLeagueDto {
+  seasonId: Int!
+  name: String!
+}

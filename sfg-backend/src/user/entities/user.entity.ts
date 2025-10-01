@@ -4,15 +4,12 @@ import { Profile } from '../profile/profile.entity';
 
 @ObjectType()
 export class User {
-    @Field(() => ID!)
-    userId: string;
+  @Field(() => ID!)
+  userId: string;
 
-    @Field(() => String!)
-    email: string;
+  @Field(() => String!)
+  email: string;
 
-    @Field(() => UserRole!)
-    role: UserRole;
-
-    @Field(() => Profile!)
-    profile: Profile;
+  @Field(() => UserRole!)
+  role: UserRole;
 }

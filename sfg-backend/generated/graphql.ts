@@ -13,6 +13,12 @@ export enum UserRole {
     ADMIN = "ADMIN"
 }
 
+export enum LeagueMemberRole {
+    ADMIN = "ADMIN",
+    MEMBER = "MEMBER",
+    OWNER = "OWNER"
+}
+
 export class SignupDto {
     email: string;
     password: string;
@@ -39,12 +45,9 @@ export class UpdateSeasonDto {
     airEndDate?: Nullable<string>;
 }
 
-export class Profile {
-    id: string;
-    firstName: string;
-    lastName?: Nullable<string>;
-    isPublic: boolean;
-    userName: string;
+export class CreateLeagueDto {
+    seasonId: number;
+    name: string;
 }
 
 export class User {
@@ -57,6 +60,14 @@ export class User {
 export class AuthPayload {
     user: User;
     token: string;
+}
+
+export class Profile {
+    id: string;
+    firstName: string;
+    lastName?: Nullable<string>;
+    isPublic: boolean;
+    userName: string;
 }
 
 export class HealthCheckResult {
@@ -72,6 +83,21 @@ export class SeasonEntity {
     airEndDate?: Nullable<DateTime>;
 }
 
+export class LeagueEntity {
+    leagueId: string;
+    leagueName: string;
+    createdAt: DateTime;
+    season: SeasonEntity;
+    createdBy: LeagueMemberEntity;
+}
+
+export class LeagueMemberEntity {
+    id: string;
+    role: LeagueMemberRole;
+    user: User;
+    league: LeagueEntity;
+}
+
 export abstract class IQuery {
     abstract healthCheck(): HealthCheckResult | Promise<HealthCheckResult>;
 
@@ -80,6 +106,8 @@ export abstract class IQuery {
     abstract getSeason(seasonId: number): SeasonEntity | Promise<SeasonEntity>;
 
     abstract getCurrentSeason(): Nullable<SeasonEntity> | Promise<Nullable<SeasonEntity>>;
+
+    abstract getMyLeagues(): LeagueEntity[] | Promise<LeagueEntity[]>;
 }
 
 export abstract class IMutation {
@@ -92,6 +120,8 @@ export abstract class IMutation {
     abstract updateSeason(seasonId: number, input: UpdateSeasonDto): SeasonEntity | Promise<SeasonEntity>;
 
     abstract deleteSeason(seasonId: number): boolean | Promise<boolean>;
+
+    abstract createLeague(input: CreateLeagueDto): LeagueEntity | Promise<LeagueEntity>;
 }
 
 export type DateTime = any;

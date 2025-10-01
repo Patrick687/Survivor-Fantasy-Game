@@ -19,6 +19,8 @@ model User {
   profile   Profile?
   passwords Password[]
   tokens    Token[]
+  createdLeagues  League[]
+  leagueMembers LeagueMember[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -65,4 +67,40 @@ model Season {
   filmingLocation String?
   airStartDate DateTime?
   airEndDate DateTime?
+  leagues League[]
+}
+
+model League {
+  leagueId   String   @id @default(uuid())
+  leagueName String
+  season     Season   @relation(fields: [seasonId], references: [seasonId], onDelete: Restrict, onUpdate: Cascade)
+  seasonId   Int
+  createdBy  User     @relation(fields: [createdById], references: [userId], onDelete: Restrict, onUpdate: Cascade)
+  createdById String
+  members     LeagueMember[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([seasonId])
+  @@index([createdById])
+}
+
+enum LeagueMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model LeagueMember {
+  id        String            @id @default(uuid())
+  league    League            @relation(fields: [leagueId], references: [leagueId], onDelete: Cascade, onUpdate: Cascade)
+  leagueId  String
+  user   User           @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  userId String
+  role      LeagueMemberRole  @default(MEMBER)
+  joinedAt  DateTime          @default(now())
+
+  @@unique([leagueId, userId])
+  @@index([leagueId])
+  @@index([userId])
 }

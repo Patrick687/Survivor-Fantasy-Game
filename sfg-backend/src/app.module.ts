@@ -9,12 +9,13 @@ import { SeedDataModule } from './prisma/seedData/seedData.module';
 import { AuthModule } from './auth/auth.module';
 import { AppResolver } from './app.resolver';
 import { SeasonModule } from './season/season.module';
+import { LeagueModule } from './league/league.module';
 
 @Module({
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: 'generated/graphql.ts',
+      autoSchemaFile: join(process.cwd(), 'generated/schema.gql'),
       playground: true,
       definitions: {
         path: join(process.cwd(), 'generated/graphql.ts'),
@@ -30,6 +31,7 @@ import { SeasonModule } from './season/season.module';
     SeedDataModule,
     AuthModule,
     SeasonModule,
+    LeagueModule,
   ],
 
   providers: [AppResolver],
