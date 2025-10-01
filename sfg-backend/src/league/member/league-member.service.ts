@@ -43,6 +43,17 @@ export class LeagueMemberService {
     };
   }
 
+  async getAllMembersForLeague(
+    leagueId: League['leagueId'],
+  ): Promise<LeagueMemberEntity[]> {
+    const leagueMemberData =
+      await this.leagueMemberRepository.getMembersByLeagueId(leagueId);
+    return leagueMemberData.map((member) => ({
+      ...member,
+      role: this.mapPrismaRoleToEntityRole(member.role),
+    }));
+  }
+
   async getAllMembersForUser(
     userId: UserDomain['userId'],
   ): Promise<LeagueMemberEntity[]> {

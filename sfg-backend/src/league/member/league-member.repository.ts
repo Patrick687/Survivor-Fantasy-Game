@@ -31,4 +31,15 @@ export class LeagueMemberRepository {
       },
     });
   }
+
+  async getMembersByLeagueId(
+    leagueId: LeagueMember['leagueId'],
+    prismaClient: PrismaService | Prisma.TransactionClient = this.prisma,
+  ): Promise<LeagueMember[]> {
+    return await prismaClient.leagueMember.findMany({
+      where: {
+        leagueId: leagueId,
+      },
+    });
+  }
 }

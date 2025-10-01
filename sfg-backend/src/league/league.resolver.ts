@@ -92,4 +92,15 @@ export class LeagueResolver {
       league.leagueId,
     );
   }
+
+  @ResolveField(() => [LeagueMemberEntity!]!, {
+    name: 'members',
+    nullable: false,
+  })
+  async members(@Parent() league: LeagueEntity): Promise<LeagueMemberEntity[]> {
+    this.logger.debug(`✉️ Resolving members for leagueId: ${league.leagueId}`);
+    return await this.leagueMemberService.getAllMembersForLeague(
+      league.leagueId,
+    );
+  }
 }

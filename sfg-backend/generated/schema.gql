@@ -52,6 +52,7 @@ type LeagueEntity {
   createdAt: DateTime!
   season: SeasonEntity!
   createdBy: LeagueMemberEntity!
+  members: [LeagueMemberEntity!]!
 }
 
 type LeagueMemberEntity {

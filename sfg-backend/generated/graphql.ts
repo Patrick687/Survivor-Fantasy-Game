@@ -89,6 +89,7 @@ export class LeagueEntity {
     createdAt: DateTime;
     season: SeasonEntity;
     createdBy: LeagueMemberEntity;
+    members: LeagueMemberEntity[];
 }
 
 export class LeagueMemberEntity {
