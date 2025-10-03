@@ -6,6 +6,7 @@ import { UserModule } from 'src/user/user.module';
 import { LeagueRepository } from './league.repository';
 import { LeagueService } from './league.service';
 import { LeagueResolver } from './league.resolver';
+import { LeagueInviteTokenModule } from './inviteToken/league-invite-token.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { LeagueResolver } from './league.resolver';
     forwardRef(() => LeagueMemberModule),
     SeasonModule,
     UserModule,
+    LeagueInviteTokenModule,
   ],
   providers: [LeagueRepository, LeagueService, LeagueResolver],
   exports: [LeagueService],

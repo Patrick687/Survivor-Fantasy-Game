@@ -14,9 +14,9 @@ export enum UserRole {
 }
 
 export enum LeagueMemberRole {
+    OWNER = "OWNER",
     ADMIN = "ADMIN",
-    MEMBER = "MEMBER",
-    OWNER = "OWNER"
+    MEMBER = "MEMBER"
 }
 
 export class SignupDto {
@@ -32,6 +32,11 @@ export class LoginDto {
     password: string;
 }
 
+export class CreateLeagueDto {
+    seasonId: number;
+    name: string;
+}
+
 export class CreateSeasonDto {
     seasonId: number;
     filmingLocation?: Nullable<string>;
@@ -43,11 +48,6 @@ export class UpdateSeasonDto {
     filmingLocation?: Nullable<string>;
     airStartDate?: Nullable<string>;
     airEndDate?: Nullable<string>;
-}
-
-export class CreateLeagueDto {
-    seasonId: number;
-    name: string;
 }
 
 export class User {
@@ -70,19 +70,6 @@ export class Profile {
     userName: string;
 }
 
-export class HealthCheckResult {
-    status: string;
-    environment: string;
-    timestamp: string;
-}
-
-export class SeasonEntity {
-    seasonId: number;
-    filmingLocation?: Nullable<string>;
-    airStartDate?: Nullable<DateTime>;
-    airEndDate?: Nullable<DateTime>;
-}
-
 export class LeagueEntity {
     leagueId: string;
     leagueName: string;
@@ -99,16 +86,29 @@ export class LeagueMemberEntity {
     league: LeagueEntity;
 }
 
+export class SeasonEntity {
+    seasonId: number;
+    filmingLocation?: Nullable<string>;
+    airStartDate?: Nullable<DateTime>;
+    airEndDate?: Nullable<DateTime>;
+}
+
+export class HealthCheckResult {
+    status: string;
+    environment: string;
+    timestamp: string;
+}
+
 export abstract class IQuery {
     abstract healthCheck(): HealthCheckResult | Promise<HealthCheckResult>;
+
+    abstract getMyLeagues(): LeagueEntity[] | Promise<LeagueEntity[]>;
 
     abstract getAllSeasons(): SeasonEntity[] | Promise<SeasonEntity[]>;
 
     abstract getSeason(seasonId: number): SeasonEntity | Promise<SeasonEntity>;
 
     abstract getCurrentSeason(): Nullable<SeasonEntity> | Promise<Nullable<SeasonEntity>>;
-
-    abstract getMyLeagues(): LeagueEntity[] | Promise<LeagueEntity[]>;
 }
 
 export abstract class IMutation {
@@ -116,13 +116,17 @@ export abstract class IMutation {
 
     abstract login(data: LoginDto): AuthPayload | Promise<AuthPayload>;
 
+    abstract createLeague(input: CreateLeagueDto): LeagueEntity | Promise<LeagueEntity>;
+
     abstract createSeason(input: CreateSeasonDto): SeasonEntity | Promise<SeasonEntity>;
 
     abstract updateSeason(seasonId: number, input: UpdateSeasonDto): SeasonEntity | Promise<SeasonEntity>;
 
     abstract deleteSeason(seasonId: number): boolean | Promise<boolean>;
 
-    abstract createLeague(input: CreateLeagueDto): LeagueEntity | Promise<LeagueEntity>;
+    abstract generateInviteCode(leagueId: string, expiresInMinutes: number): string | Promise<string>;
+
+    abstract joinLeagueWithToken(inviteToken: string): LeagueMemberEntity | Promise<LeagueMemberEntity>;
 }
 
 export type DateTime = any;

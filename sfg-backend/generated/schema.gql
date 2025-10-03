@@ -28,24 +28,6 @@ type Profile {
   userName: String!
 }
 
-type HealthCheckResult {
-  status: String!
-  environment: String!
-  timestamp: String!
-}
-
-type SeasonEntity {
-  seasonId: Int!
-  filmingLocation: String
-  airStartDate: DateTime
-  airEndDate: DateTime
-}
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 type LeagueEntity {
   leagueId: ID!
   leagueName: String!
@@ -55,6 +37,11 @@ type LeagueEntity {
   members: [LeagueMemberEntity!]!
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type LeagueMemberEntity {
   id: String!
   role: LeagueMemberRole!
@@ -62,28 +49,48 @@ type LeagueMemberEntity {
   league: LeagueEntity!
 }
 
-"""The role of a member within a league"""
+"""The role of a member in a league"""
 enum LeagueMemberRole {
-  ADMIN
-  MEMBER
+  """Owner of the league with full permissions"""
   OWNER
+
+  """Administrator with management permissions"""
+  ADMIN
+
+  """Regular league member"""
+  MEMBER
+}
+
+type SeasonEntity {
+  seasonId: Int!
+  filmingLocation: String
+  airStartDate: DateTime
+  airEndDate: DateTime
+}
+
+type HealthCheckResult {
+  status: String!
+  environment: String!
+  timestamp: String!
 }
 
 type Query {
   healthCheck: HealthCheckResult!
+  getMyLeagues: [LeagueEntity!]!
   getAllSeasons: [SeasonEntity!]!
   getSeason(seasonId: Int!): SeasonEntity!
   getCurrentSeason: SeasonEntity
-  getMyLeagues: [LeagueEntity!]!
 }
 
 type Mutation {
   signup(data: SignupDto!): AuthPayload!
   login(data: LoginDto!): AuthPayload!
+  createLeague(input: CreateLeagueDto!): LeagueEntity!
   createSeason(input: CreateSeasonDto!): SeasonEntity!
   updateSeason(seasonId: Int!, input: UpdateSeasonDto!): SeasonEntity!
   deleteSeason(seasonId: Int!): Boolean!
-  createLeague(input: CreateLeagueDto!): LeagueEntity!
+  generateInviteCode(leagueId: String!, expiresInMinutes: Float! = 30): String!
+  joinLeagueWithToken(inviteToken: String!): LeagueMemberEntity!
 }
 
 input SignupDto {
@@ -99,6 +106,11 @@ input LoginDto {
   password: String!
 }
 
+input CreateLeagueDto {
+  seasonId: Int!
+  name: String!
+}
+
 input CreateSeasonDto {
   seasonId: Int!
   filmingLocation: String
@@ -110,9 +122,4 @@ input UpdateSeasonDto {
   filmingLocation: String
   airStartDate: String
   airEndDate: String
-}
-
-input CreateLeagueDto {
-  seasonId: Int!
-  name: String!
 }

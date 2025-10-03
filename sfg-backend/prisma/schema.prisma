@@ -21,6 +21,7 @@ model User {
   tokens    Token[]
   createdLeagues  League[]
   leagueMembers LeagueMember[]
+  createdTokens LeagueInviteToken[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -78,6 +79,7 @@ model League {
   createdBy  User     @relation(fields: [createdById], references: [userId], onDelete: Restrict, onUpdate: Cascade)
   createdById String
   members     LeagueMember[]
+  inviteTokens LeagueInviteToken[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -103,4 +105,21 @@ model LeagueMember {
   @@unique([leagueId, userId])
   @@index([leagueId])
   @@index([userId])
+}
+
+model LeagueInviteToken {
+  id  String  @id @default(uuid())
+  leagueId String
+  createdBy String
+  token String @unique
+  expiresAt DateTime
+  usedCount Int @default(0)
+  createdAt DateTime @default(now())
+
+  league    League   @relation(fields: [leagueId], references: [leagueId], onDelete: Cascade)
+  creator   User     @relation(fields: [createdBy], references: [userId])
+
+  @@index([leagueId])
+  @@index([token])
+  @@index([createdBy])
 }

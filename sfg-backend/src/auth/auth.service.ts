@@ -1,12 +1,13 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { SignupDto } from './dtos/signup.dto';
-import { AuthPayload } from './entities/auth-payload.entity';
 import { UserService } from 'src/user/user.service';
 import { LoginDto } from './dtos/login.dto';
 import { PasswordService } from 'src/user/password/password.service';
 import { TokenService } from './token/token.service';
 import { AuthPayloadDomain } from './entities/auth-payload.domain';
 import { UserDomain } from 'src/user/user.domain';
+import { LeagueMemberService } from 'src/league/member/league-member.service';
+import { JwtPayload } from './token/jwt-payload.type';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
+    private readonly leagueMemberService: LeagueMemberService,
   ) {}
 
   async signup({
@@ -39,6 +41,7 @@ export class AuthService {
       const token = await this.tokenService.issueTokenForUser(
         user.userId,
         user.role,
+        await this.getLeaguesPayload(user.userId),
       );
 
       this.logger.debug(`🎫 Token generated for user: ${user.userId}`);
@@ -108,6 +111,7 @@ export class AuthService {
     const token = await this.tokenService.issueTokenForUser(
       user.userId,
       user.role,
+      await this.getLeaguesPayload(user.userId),
     );
 
     this.logger.debug(
@@ -118,5 +122,17 @@ export class AuthService {
       user,
       token: token.token,
     };
+  }
+
+  private async getLeaguesPayload(
+    userId: string,
+  ): Promise<JwtPayload['leagues']> {
+    const userAsLeagueMembers =
+      await this.leagueMemberService.getAllMembersForUser(userId);
+    const leaguesPayload = userAsLeagueMembers.map((lm) => ({
+      leagueId: lm.leagueId,
+      role: lm.role,
+    }));
+    return leaguesPayload;
   }
 }

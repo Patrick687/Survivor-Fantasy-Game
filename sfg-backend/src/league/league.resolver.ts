@@ -13,7 +13,6 @@ import { JwtAuthGuard } from '../auth/token/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { type JwtPayload } from '../auth/token/jwt-payload.type';
 import { SeasonService } from 'src/season/season.service';
-import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { LeagueMemberService } from './member/league-member.service';
 import { SeasonEntity } from 'src/season/season.entity';

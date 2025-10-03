@@ -5,6 +5,7 @@ import { LeagueMemberService } from './league-member.service';
 import { LeagueMemberResolver } from './league-member.resolver';
 import { UserModule } from 'src/user/user.module';
 import { LeagueModule } from '../league.module';
+import './entities/league-member-role.enum';
 
 @Module({
   imports: [PrismaModule, UserModule, forwardRef(() => LeagueModule)],
