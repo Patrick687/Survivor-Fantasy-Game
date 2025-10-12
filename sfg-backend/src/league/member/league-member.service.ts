@@ -1,10 +1,16 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { UserDomain } from 'src/user/user.domain';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { LeagueMemberRepository } from './league-member.repository';
 import { League, LeagueMemberRole, Prisma } from '@prisma/client';
 import { LeagueMemberEntity } from './entities/league-member.entity';
 import { User } from 'src/user/entities/user.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 
 @Injectable()
 export class LeagueMemberService {
@@ -65,12 +71,94 @@ export class LeagueMemberService {
   }
 
   async getAllMembersForUser(
-    userId: UserDomain['userId'],
+    userId: User['userId'],
   ): Promise<LeagueMemberEntity[]> {
     const leagueMemberData =
       await this.leagueMemberRepository.getMembersByUserId(userId);
     return leagueMemberData.map((member) => ({
       ...member,
     }));
+  }
+
+  async updateMemberRole(
+    requesterUserId: string,
+    input: UpdateMemberRoleDto,
+    requesterRole: LeagueMemberRole,
+  ): Promise<LeagueMemberEntity> {
+    const { leagueId, targetUserId, newRole } = input;
+
+    const targetMember = await this.leagueMemberRepository.findByUserAndLeague(
+      targetUserId,
+      leagueId,
+    );
+
+    if (!targetMember) {
+      throw new NotFoundException('Target user is not a member of the league');
+    }
+
+    const requesterMember =
+      await this.leagueMemberRepository.findByUserAndLeague(
+        requesterUserId,
+        leagueId,
+      );
+
+    if (!requesterMember) {
+      throw new ForbiddenException('You are not a member of this league');
+    }
+
+    this.validateRoleUpdate(requesterMember, targetMember, newRole);
+
+    const updatedMember = await this.leagueMemberRepository.updateRole(
+      targetMember.id,
+      newRole,
+    );
+
+    return updatedMember;
+  }
+
+  private validateRoleUpdate(
+    requester: LeagueMemberEntity,
+    target: LeagueMemberEntity,
+    newRole: LeagueMemberRole,
+  ) {
+    // Owner cannot change their own role
+    if (
+      requester.id === target.id &&
+      requester.role === LeagueMemberRole.OWNER
+    ) {
+      throw new BadRequestException('Owner cannot change their own role');
+    }
+
+    // Only owners can promote/demote
+    if (requester.role !== LeagueMemberRole.OWNER) {
+      // Admins can only promote members to admin (not demote other admins)
+      if (requester.role === LeagueMemberRole.ADMIN) {
+        if (
+          target.role === LeagueMemberRole.ADMIN &&
+          newRole === LeagueMemberRole.MEMBER
+        ) {
+          throw new ForbiddenException('Admins cannot demote other admins');
+        }
+        if (newRole === LeagueMemberRole.OWNER) {
+          throw new ForbiddenException('Only owners can assign owner role');
+        }
+      } else {
+        throw new ForbiddenException(
+          'Only owners and admins can change member roles',
+        );
+      }
+    }
+
+    // Cannot promote to owner (only one owner allowed - would need transfer ownership)
+    if (newRole === LeagueMemberRole.OWNER) {
+      throw new BadRequestException(
+        'Cannot promote to owner. Use transfer ownership instead.',
+      );
+    }
+
+    // Validate role transition
+    if (target.role === newRole) {
+      throw new BadRequestException('User already has this role');
+    }
   }
 }

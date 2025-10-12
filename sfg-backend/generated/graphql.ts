@@ -9,8 +9,8 @@
 /* eslint-disable */
 
 export enum UserRole {
-    USER = "USER",
-    ADMIN = "ADMIN"
+    ADMIN = "ADMIN",
+    USER = "USER"
 }
 
 export enum LeagueMemberRole {
@@ -30,6 +30,12 @@ export class SignupDto {
 export class LoginDto {
     userNameOrEmail: string;
     password: string;
+}
+
+export class UpdateMemberRoleDto {
+    leagueId: string;
+    targetUserId: string;
+    newRole: LeagueMemberRole;
 }
 
 export class CreateLeagueDto {
@@ -115,6 +121,12 @@ export abstract class IMutation {
     abstract signup(data: SignupDto): AuthPayload | Promise<AuthPayload>;
 
     abstract login(data: LoginDto): AuthPayload | Promise<AuthPayload>;
+
+    abstract promoteMemberToAdmin(leagueId: string, targetUserId: string): LeagueMemberEntity | Promise<LeagueMemberEntity>;
+
+    abstract demoteAdminToMember(leagueId: string, targetUserId: string): LeagueMemberEntity | Promise<LeagueMemberEntity>;
+
+    abstract updateMemberRole(input: UpdateMemberRoleDto): LeagueMemberEntity | Promise<LeagueMemberEntity>;
 
     abstract createLeague(input: CreateLeagueDto): LeagueEntity | Promise<LeagueEntity>;
 

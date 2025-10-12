@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { TokenRepository } from './token.repository';
 import { Token } from '@prisma/client';
 import { JwtPayload } from './jwt-payload.type';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class TokenService {
@@ -17,7 +18,10 @@ export class TokenService {
     leagues: JwtPayload['leagues'],
     expiresIn: string | number = '1d',
   ): Promise<{ token: string; tokenRecord: Token }> {
-    const payload: JwtPayload = { userId, userRole, leagues };
+    const jti = randomBytes(16).toString('hex'); // Generate a random JWT ID
+    const iat = Math.floor(Date.now() / 1000);
+
+    const payload: JwtPayload = { userId, userRole, leagues, jti, iat };
     const token = await this.jwtService.signAsync(payload, { expiresIn });
 
     const expiresAt = new Date(

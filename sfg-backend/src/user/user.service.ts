@@ -1,23 +1,14 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { User } from './entities/user.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserRepository } from './user.repository';
-import {
-  Prisma,
-  Profile,
-  User as UserPrisma,
-  UserRole as UserRolePrisma,
-} from '@prisma/client';
+import { Prisma, User as UserPrisma } from '@prisma/client';
 import { ProfileService } from './profile/profile.service';
 import { PasswordService } from './password/password.service';
-import { UserRole } from './entities/user-role.enum';
-import { UserDomain } from './user.domain';
-import { ProfileRepository } from './profile/profile.repository';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -28,7 +19,7 @@ export class UserService {
     private readonly passwordService: PasswordService,
   ) {}
 
-  async getUser(where: Prisma.UserWhereUniqueInput): Promise<UserDomain> {
+  async getUser(where: Prisma.UserWhereUniqueInput): Promise<User> {
     const userRecord = await this.userRepository.findUserByUnique(where);
 
     if (!userRecord) {
@@ -40,19 +31,7 @@ export class UserService {
 
     return {
       ...userRecord,
-      role: this.mapUserRole(userRecord.role),
     };
-  }
-
-  private mapUserRole(role: UserRolePrisma): UserRole {
-    switch (role) {
-      case UserRolePrisma.ADMIN:
-        return UserRole.ADMIN;
-      case UserRolePrisma.USER:
-        return UserRole.USER;
-      default:
-        throw new InternalServerErrorException(`Unknown user role: ${role}`);
-    }
   }
 
   /**
@@ -60,9 +39,7 @@ export class UserService {
    * @returns The UserDomain associated with the profile
    * @throws NotFoundException if the profile or user is not found
    */
-  async getUserByProfile(
-    where: Prisma.ProfileWhereUniqueInput,
-  ): Promise<UserDomain> {
+  async getUserByProfile(where: Prisma.ProfileWhereUniqueInput): Promise<User> {
     const profile = await this.profileService.getProfile(where);
     return await this.getUser({ userId: profile.userId });
   }
@@ -78,7 +55,7 @@ export class UserService {
       profileInfo: Prisma.ProfileUncheckedCreateWithoutUserInput;
     },
     prismaClient: PrismaService | Prisma.TransactionClient = this.prisma,
-  ): Promise<UserDomain> {
+  ): Promise<User> {
     const existingUserRecord = await this.userRepository.findUserByUnique({
       email: userInfo.email,
     });

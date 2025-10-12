@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../../../../src/auth/token/jwt-auth.guard';
 import { MockFactories } from '../../utils/mock-factories';
 import { JwtPayload } from '../../../../src/auth/token/jwt-payload.type';
-import { UserRole } from '../../../../src/user/entities/user-role.enum';
+import { UserRole } from '@prisma/client';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;

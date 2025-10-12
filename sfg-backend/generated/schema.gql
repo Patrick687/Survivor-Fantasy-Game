@@ -11,8 +11,11 @@ type User {
 
 """The role of the user in the system"""
 enum UserRole {
-  USER
+  """Administrator with elevated system permissions"""
   ADMIN
+
+  """Regular user with standard permissions"""
+  USER
 }
 
 type AuthPayload {
@@ -85,6 +88,9 @@ type Query {
 type Mutation {
   signup(data: SignupDto!): AuthPayload!
   login(data: LoginDto!): AuthPayload!
+  promoteMemberToAdmin(leagueId: String!, targetUserId: String!): LeagueMemberEntity!
+  demoteAdminToMember(leagueId: String!, targetUserId: String!): LeagueMemberEntity!
+  updateMemberRole(input: UpdateMemberRoleDto!): LeagueMemberEntity!
   createLeague(input: CreateLeagueDto!): LeagueEntity!
   createSeason(input: CreateSeasonDto!): SeasonEntity!
   updateSeason(seasonId: Int!, input: UpdateSeasonDto!): SeasonEntity!
@@ -104,6 +110,12 @@ input SignupDto {
 input LoginDto {
   userNameOrEmail: String!
   password: String!
+}
+
+input UpdateMemberRoleDto {
+  leagueId: String!
+  targetUserId: String!
+  newRole: LeagueMemberRole!
 }
 
 input CreateLeagueDto {

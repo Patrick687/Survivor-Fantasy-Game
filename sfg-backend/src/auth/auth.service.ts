@@ -5,9 +5,9 @@ import { LoginDto } from './dtos/login.dto';
 import { PasswordService } from 'src/user/password/password.service';
 import { TokenService } from './token/token.service';
 import { AuthPayloadDomain } from './entities/auth-payload.domain';
-import { UserDomain } from 'src/user/user.domain';
 import { LeagueMemberService } from 'src/league/member/league-member.service';
 import { JwtPayload } from './token/jwt-payload.type';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -62,7 +62,7 @@ export class AuthService {
   }: LoginDto): Promise<AuthPayloadDomain> {
     this.logger.debug(`🔍 Attempting login for: ${userNameOrEmail}`);
 
-    let user: UserDomain;
+    let user: User;
 
     try {
       this.logger.debug('📧 Trying email lookup...');

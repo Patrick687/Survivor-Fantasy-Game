@@ -1,6 +1,5 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
-import { SeasonEntity } from 'src/season/season.entity';
-import { UserDomain } from 'src/user/user.domain';
+import { Season, User } from '@prisma/client';
 
 @ObjectType()
 export class LeagueEntity {
@@ -13,6 +12,6 @@ export class LeagueEntity {
   @Field(() => Date!, { nullable: false })
   createdAt: Date;
 
-  seasonId: SeasonEntity['seasonId'];
-  createdBy: UserDomain['userId'];
+  seasonId: Season['seasonId'];
+  createdBy: User['userId'];
 }

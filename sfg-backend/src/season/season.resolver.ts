@@ -3,6 +3,8 @@ import { SeasonEntity } from './season.entity';
 import { SeasonService } from './season.service';
 import { CreateSeasonDto } from './dto/create-season.dto';
 import { UpdateSeasonDto } from './dto/update-season.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/token/jwt-auth.guard';
 
 @Resolver(() => SeasonEntity)
 export class SeasonResolver {
@@ -26,6 +28,7 @@ export class SeasonResolver {
   }
 
   @Mutation(() => SeasonEntity!, { name: 'createSeason', nullable: false })
+  @UseGuards(JwtAuthGuard)
   async createSeason(
     @Args('input') createSeasonDto: CreateSeasonDto,
   ): Promise<SeasonEntity> {

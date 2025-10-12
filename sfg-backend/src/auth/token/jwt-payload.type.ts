@@ -1,5 +1,5 @@
+import { UserRole } from '@prisma/client';
 import { LeagueMemberRole } from '@prisma/client';
-import { UserRole } from 'src/user/entities/user-role.enum';
 
 export type JwtPayload = {
   userId: string;
@@ -8,4 +8,6 @@ export type JwtPayload = {
     leagueId: string;
     role: LeagueMemberRole;
   }>;
+  jti: string; // JWT ID for uniqueness,
+  iat: number; // Issued at time
 };

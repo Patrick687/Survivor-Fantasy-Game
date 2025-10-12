@@ -1,14 +1,11 @@
-import { UserDomain } from "src/user/user.domain";
+import { User } from 'src/user/entities/user.entity';
 
 export class AuthPayloadDomain {
-    public user: UserDomain;
-    public token: string;
+  public user: User;
+  public token: string;
 
-    constructor(
-        user: UserDomain,
-        token: string
-    ) {
-        this.user = user;
-        this.token = token;
-    }
+  constructor(user: User, token: string) {
+    this.user = user;
+    this.token = token;
+  }
 }

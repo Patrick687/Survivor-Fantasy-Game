@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LeagueMember, Prisma } from '@prisma/client';
+import { LeagueMember, LeagueMemberRole, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -40,6 +40,28 @@ export class LeagueMemberRepository {
       where: {
         leagueId: leagueId,
       },
+    });
+  }
+
+  async findByUserAndLeague(
+    userId: string,
+    leagueId: string,
+  ): Promise<LeagueMember | null> {
+    return this.prisma.leagueMember.findFirst({
+      where: {
+        userId: userId,
+        leagueId,
+      },
+    });
+  }
+
+  async updateRole(
+    memberId: string,
+    newRole: LeagueMemberRole,
+  ): Promise<LeagueMember> {
+    return this.prisma.leagueMember.update({
+      where: { id: memberId },
+      data: { role: newRole },
     });
   }
 }
