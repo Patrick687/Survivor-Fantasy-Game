@@ -41,7 +41,6 @@ export class AuthService {
       const token = await this.tokenService.issueTokenForUser(
         user.userId,
         user.role,
-        await this.getLeaguesPayload(user.userId),
       );
 
       this.logger.debug(`🎫 Token generated for user: ${user.userId}`);
@@ -111,7 +110,6 @@ export class AuthService {
     const token = await this.tokenService.issueTokenForUser(
       user.userId,
       user.role,
-      await this.getLeaguesPayload(user.userId),
     );
 
     this.logger.debug(
@@ -122,17 +120,5 @@ export class AuthService {
       user,
       token: token.token,
     };
-  }
-
-  private async getLeaguesPayload(
-    userId: string,
-  ): Promise<JwtPayload['leagues']> {
-    const userAsLeagueMembers =
-      await this.leagueMemberService.getAllMembersForUser(userId);
-    const leaguesPayload = userAsLeagueMembers.map((lm) => ({
-      leagueId: lm.leagueId,
-      role: lm.role,
-    }));
-    return leaguesPayload;
   }
 }

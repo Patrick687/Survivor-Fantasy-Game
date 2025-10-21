@@ -1,11 +1,14 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import createTestApp, { TestApp } from '../utils/setup-nest-app';
 import { AuthPayload, CreateSeasonDto } from 'generated/graphql';
-import { SeasonBuilder } from '../utils/builders/season.builder';
-import { UserBuilder } from '../utils/builders/user.builder';
 import { createSeasonMutation } from '../utils/mutations';
 import { expectGraphQLError } from '../utils/graphql-assertions';
-import { UnauthorizedException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { SeasonDataBuilder } from '../utils/builders/season.builder';
+import { SeasonActions } from '../utils/actions/season.actions';
+import { AuthActions } from '../utils/actions/auth.actions';
+import { SignupDataBuilder } from '../utils/builders/signup.builder';
+import cleanUpData from '../utils/clean-up-data';
 
 describe('SeasonResolver', () => {
   let app: TestApp;
@@ -24,52 +27,44 @@ describe('SeasonResolver', () => {
   });
 
   beforeEach(async () => {
-    await prisma.season.deleteMany({});
+    await cleanUpData(prisma);
+  });
+  afterEach(async () => {
+    await cleanUpData(prisma);
   });
 
   describe('createSeason', () => {
     it('should require valid Jwt token', async () => {
-      const seasonInfo: CreateSeasonDto = {
-        seasonId: 45,
-        filmingLocation: 'Fiji',
-        airStartDate: '2024-01-01',
-        airEndDate: '2024-05-01',
-      };
-
-      const response = await app.mutation<'createSeason'>(
-        createSeasonMutation,
-        {
-          input: seasonInfo,
-        },
+      const seasonData = new SeasonDataBuilder().withSeasonId(1).build();
+      await new SeasonActions(app).expectCreateSeasonToFail(
+        seasonData,
+        UnauthorizedException,
       );
-      expectGraphQLError(response, UnauthorizedException);
     });
 
     it('should create a season', async () => {
-      // Create authenticated user
-      user1AuthPayload = await UserBuilder.build(app, {
-        email: 'test@example.com',
-        password: 'password123',
-        firstName: 'Test',
-        lastName: 'User',
-        userName: 'testuser',
-      });
-
+      const user1Data = new SignupDataBuilder().build();
+      const user1AuthPayload = await new AuthActions(app).expectSignupToSucceed(
+        user1Data,
+      );
       app.setAuthToken(user1AuthPayload.token);
+      const seasonData = new SeasonDataBuilder().withSeasonId(1).build();
+      await new SeasonActions(app).expectCreateSeasonToSucceed(seasonData);
+    });
 
-      const seasonInfo: CreateSeasonDto = {
-        seasonId: 45,
-        filmingLocation: 'Fiji',
-        airStartDate: '2024-01-01',
-        airEndDate: '2024-05-01',
-      };
+    it('should not allow duplicate seasonId', async () => {
+      const user1Data = new SignupDataBuilder().build();
+      const user1AuthPayload = await new AuthActions(app).expectSignupToSucceed(
+        user1Data,
+      );
+      app.setAuthToken(user1AuthPayload.token);
+      const seasonData = new SeasonDataBuilder().withSeasonId(1).build();
+      await new SeasonActions(app).expectCreateSeasonToSucceed(seasonData);
 
-      // Use SeasonBuilder which handles the mutation and assertions
-      const createdSeason = await SeasonBuilder.build(app, seasonInfo);
-
-      expect(createdSeason).toBeDefined();
-      expect(createdSeason.seasonId).toBe(45);
-      expect(createdSeason.filmingLocation).toBe('Fiji');
+      await new SeasonActions(app).expectCreateSeasonToFail(
+        seasonData,
+        ConflictException,
+      );
     });
   });
 });

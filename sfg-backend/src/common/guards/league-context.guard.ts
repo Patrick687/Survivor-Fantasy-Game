@@ -1,4 +1,3 @@
-// src/common/guards/league-context.guard.ts
 import {
   CanActivate,
   ExecutionContext,
@@ -8,12 +7,15 @@ import {
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtPayload } from '../../auth/token/jwt-payload.type';
+import { LeagueMemberService } from '../../league/member/league-member.service';
 
 @Injectable()
 export class LeagueContextGuard implements CanActivate {
   private readonly logger = new Logger(LeagueContextGuard.name);
 
-  canActivate(context: ExecutionContext): boolean {
+  constructor(private readonly leagueMemberService: LeagueMemberService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const gqlContext = GqlExecutionContext.create(context);
     const args = gqlContext.getArgs();
     const request = gqlContext.getContext().req;
@@ -36,15 +38,13 @@ export class LeagueContextGuard implements CanActivate {
       throw new ForbiddenException('League ID is required');
     }
 
-    if (!user.leagues) {
-      this.logger.error(`❌ LeagueContextGuard - User has no leagues in JWT`);
-      throw new ForbiddenException('No league memberships found in token');
-    }
+    // 🔄 CHANGED: Check database instead of JWT
+    const leagueMembership =
+      await this.leagueMemberService.getUserLeagueMembership(
+        user.userId,
+        leagueId,
+      );
 
-    // Find user's membership in this league from JWT
-    const leagueMembership = user.leagues.find(
-      (league) => league.leagueId === leagueId,
-    );
     this.logger.debug(
       `🔍 LeagueContextGuard - Found membership:`,
       JSON.stringify(leagueMembership, null, 2),
@@ -57,7 +57,7 @@ export class LeagueContextGuard implements CanActivate {
       throw new ForbiddenException('You are not a member of this league');
     }
 
-    // ⭐ THIS IS THE KEY PART - Set the league context
+    // ⭐ Set the league context (now from database)
     request.currentLeague = leagueMembership;
     this.logger.debug(
       `✅ LeagueContextGuard - League context set:`,

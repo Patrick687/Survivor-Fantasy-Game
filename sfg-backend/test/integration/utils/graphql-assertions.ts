@@ -29,7 +29,7 @@ const EXCEPTION_CLASS_TO_ERROR_CODE = new Map([
   [InternalServerErrorException, 'INTERNAL_SERVER_ERROR'],
 ]);
 
-type SupportedExceptionClass =
+export type SupportedExceptionClass =
   | typeof UnauthorizedException
   | typeof ForbiddenException
   | typeof NotFoundException

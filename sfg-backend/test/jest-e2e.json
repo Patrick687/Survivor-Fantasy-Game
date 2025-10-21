@@ -14,5 +14,6 @@
   "verbose": false,
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/src/$1"
-  }
+  },
+  "runInBand": true
 }

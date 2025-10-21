@@ -15,13 +15,12 @@ export class TokenService {
   async issueTokenForUser(
     userId: JwtPayload['userId'],
     userRole: JwtPayload['userRole'],
-    leagues: JwtPayload['leagues'],
     expiresIn: string | number = '1d',
   ): Promise<{ token: string; tokenRecord: Token }> {
     const jti = randomBytes(16).toString('hex'); // Generate a random JWT ID
     const iat = Math.floor(Date.now() / 1000);
 
-    const payload: JwtPayload = { userId, userRole, leagues, jti, iat };
+    const payload: JwtPayload = { userId, userRole, jti, iat };
     const token = await this.jwtService.signAsync(payload, { expiresIn });
 
     const expiresAt = new Date(

@@ -17,6 +17,17 @@ export class LeagueMemberRepository {
     });
   }
 
+  async findUnique(params: {
+    where: {
+      leagueId_userId: {
+        userId: string;
+        leagueId: string;
+      };
+    };
+  }) {
+    return this.prisma.leagueMember.findUnique(params);
+  }
+
   async createLeagueMember(
     userId: LeagueMember['userId'],
     leagueId: LeagueMember['leagueId'],

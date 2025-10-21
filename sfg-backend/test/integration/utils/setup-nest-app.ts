@@ -10,7 +10,6 @@ import {
   UserRole,
 } from 'generated/graphql';
 import { CreateSeasonDto } from 'src/season/dto/create-season.dto';
-import { AuthPayload } from 'src/auth/entities/auth-payload.entity';
 import { JwtPayload as PrismaJwtPayload } from 'src/auth/token/jwt-payload.type';
 
 type TestAppServices = {
@@ -27,12 +26,11 @@ export interface MutationVariables {
   login: { data: LoginDto };
   createSeason: { input: CreateSeasonDto };
   createLeague: { input: CreateLeagueDto };
+  generateInviteCode: { leagueId: string; expiresInMinutes: number };
 }
 
 export interface QueryVariables {
-  // Add query variables as you create them
-  // me: undefined; // No variables needed
-  // user: { userId: string };
+  getMyLeagues: {};
 }
 
 export type TestApp = INestApplication & {

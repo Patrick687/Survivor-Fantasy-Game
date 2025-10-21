@@ -18,6 +18,29 @@ export class LeagueMemberService {
     private readonly leagueMemberRepository: LeagueMemberRepository,
   ) {}
 
+  async getUserLeagueMembership(
+    userId: string,
+    leagueId: string,
+  ): Promise<{ leagueId: string; role: LeagueMemberRole } | null> {
+    const member = await this.leagueMemberRepository.findUnique({
+      where: {
+        leagueId_userId: {
+          userId,
+          leagueId,
+        },
+      },
+    });
+
+    if (!member) {
+      return null;
+    }
+
+    return {
+      leagueId: member.leagueId,
+      role: member.role,
+    };
+  }
+
   async createLeagueOwner(
     data: Prisma.LeagueMemberUncheckedCreateInput,
     prismaClient?: PrismaService | Prisma.TransactionClient,

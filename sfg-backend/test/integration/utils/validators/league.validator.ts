@@ -1,7 +1,8 @@
-import { LeagueEntity } from 'generated/graphql';
+import { LeagueEntity, User } from 'generated/graphql';
 import { SeasonValidator } from './season.validator';
 import { LeagueMemberValidator } from './league-member.validator';
 import { DeepPartial } from '../types/deep-partial.types';
+import { UserValidator } from './user.validator';
 
 export class LeagueValidator {
   static validate(
@@ -54,5 +55,18 @@ export class LeagueValidator {
         }
       });
     }
+  }
+
+  expectUserToBeInLeague(
+    league: LeagueEntity,
+    user: DeepPartial<Omit<User, 'userId'>> & { userId: User['userId'] },
+  ) {
+    const leagueMembers = league.members;
+    const foundLeagueMember = leagueMembers.findIndex(
+      (lm) => lm.user.userId === user.userId,
+    );
+    expect(foundLeagueMember).toBeGreaterThanOrEqual(0);
+
+    UserValidator.validate(leagueMembers[foundLeagueMember].user, user);
   }
 }

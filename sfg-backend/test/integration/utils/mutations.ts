@@ -49,7 +49,7 @@ export const createSeasonMutation = `
 `;
 
 export const createLeagueMutation = `
-  Mutation CreateLeague($input: CreateLeagueDto!) {
+  mutation CreateLeague($input: CreateLeagueDto!) {
     createLeague(input: $input) {
         leagueId
         leagueName
@@ -93,5 +93,11 @@ export const createLeagueMutation = `
             }
         }
     }
+  }
+`;
+
+export const generateInviteCodeMutation = `
+  mutation GenerateInviteCode($leagueId: String!, $expiresInMinutes: Float!) {
+    generateInviteCode(leagueId: $leagueId, expiresInMinutes: $expiresInMinutes)
   }
 `;
