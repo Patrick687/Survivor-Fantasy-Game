@@ -13,17 +13,17 @@ enum UserRole {
 }
 
 model User {
-  userId    String    @id @default(uuid())
-  email     String    @unique
-  role      UserRole  @default(USER)
-  profile   Profile?
-  passwords Password[]
-  tokens    Token[]
-  createdLeagues  League[]
-  leagueMembers LeagueMember[]
-  createdTokens LeagueInviteToken[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  userId         String              @id @default(uuid())
+  email          String              @unique
+  role           UserRole            @default(USER)
+  profile        Profile?
+  passwords      Password[]
+  tokens         Token[]
+  createdLeagues League[]
+  leagueMembers  LeagueMember[]
+  createdTokens  LeagueInviteToken[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 }
 
 model Profile {
@@ -64,24 +64,25 @@ model Token {
 }
 
 model Season {
-  seasonId  Int   @id
+  seasonId        Int              @id
   filmingLocation String?
-  airStartDate DateTime?
-  airEndDate DateTime?
-  leagues League[]
+  airStartDate    DateTime?
+  airEndDate      DateTime?
+  leagues         League[]
+  survivors       SeasonSurvivor[]
 }
 
 model League {
-  leagueId   String   @id @default(uuid())
-  leagueName String
-  season     Season   @relation(fields: [seasonId], references: [seasonId], onDelete: Restrict, onUpdate: Cascade)
-  seasonId   Int
-  createdBy  User     @relation(fields: [createdById], references: [userId], onDelete: Restrict, onUpdate: Cascade)
-  createdById String
-  members     LeagueMember[]
+  leagueId     String              @id @default(uuid())
+  leagueName   String
+  season       Season              @relation(fields: [seasonId], references: [seasonId], onDelete: Restrict, onUpdate: Cascade)
+  seasonId     Int
+  createdBy    User                @relation(fields: [createdById], references: [userId], onDelete: Restrict, onUpdate: Cascade)
+  createdById  String
+  members      LeagueMember[]
   inviteTokens LeagueInviteToken[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
 
   @@index([seasonId])
   @@index([createdById])
@@ -94,13 +95,13 @@ enum LeagueMemberRole {
 }
 
 model LeagueMember {
-  id        String            @id @default(uuid())
-  league    League            @relation(fields: [leagueId], references: [leagueId], onDelete: Cascade, onUpdate: Cascade)
-  leagueId  String
-  user   User           @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  userId String
-  role      LeagueMemberRole  @default(MEMBER)
-  joinedAt  DateTime          @default(now())
+  id       String           @id @default(uuid())
+  league   League           @relation(fields: [leagueId], references: [leagueId], onDelete: Cascade, onUpdate: Cascade)
+  leagueId String
+  user     User             @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  userId   String
+  role     LeagueMemberRole @default(MEMBER)
+  joinedAt DateTime         @default(now())
 
   @@unique([leagueId, userId])
   @@index([leagueId])
@@ -108,18 +109,46 @@ model LeagueMember {
 }
 
 model LeagueInviteToken {
-  id  String  @id @default(uuid())
-  leagueId String
+  id        String   @id @default(uuid())
+  leagueId  String
   createdBy String
-  token String @unique
+  token     String   @unique
   expiresAt DateTime
-  usedCount Int @default(0)
+  usedCount Int      @default(0)
   createdAt DateTime @default(now())
 
-  league    League   @relation(fields: [leagueId], references: [leagueId], onDelete: Cascade)
-  creator   User     @relation(fields: [createdBy], references: [userId])
+  league  League @relation(fields: [leagueId], references: [leagueId], onDelete: Cascade)
+  creator User   @relation(fields: [createdBy], references: [userId])
 
   @@index([leagueId])
   @@index([token])
   @@index([createdBy])
+}
+
+model Survivor {
+  survivorId String           @id @default(uuid())
+  firstName  String
+  lastName   String
+  nickName   String?
+  seasons    SeasonSurvivor[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([firstName, lastName])
+}
+
+model SeasonSurvivor {
+  survivor   Survivor @relation(fields: [survivorId], references: [survivorId], onDelete: Cascade, onUpdate: Cascade)
+  survivorId String
+  season     Season   @relation(fields: [seasonId], references: [seasonId], onDelete: Cascade, onUpdate: Cascade)
+  seasonId   Int
+  age        Int
+  hometown   String
+  occupation String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([survivorId, seasonId])
+  @@index([survivorId])
+  @@index([seasonId])
 }
