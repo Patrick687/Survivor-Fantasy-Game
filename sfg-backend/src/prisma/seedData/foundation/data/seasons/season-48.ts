@@ -115,6 +115,73 @@ const season48: SeasonWithSurvivorsForSeeding = {
       occupation: 'Attorney',
     },
   ],
+  episodes: [
+    {
+      episodeNumber: 1,
+      title: 'The Get To Know You Game',
+      airDate: new Date('2026-02-26'),
+    },
+    {
+      episodeNumber: 2,
+      title: 'Humble Traits',
+      airDate: new Date('2026-03-05'),
+    },
+    {
+      episodeNumber: 3,
+      title: 'Committing to the Bit',
+      airDate: new Date('2026-03-12'),
+    },
+    {
+      episodeNumber: 4,
+      title: "The House Party's Over",
+      airDate: new Date('2026-03-19'),
+    },
+    {
+      episodeNumber: 5,
+      title: 'Master Class in Deception',
+      airDate: new Date('2026-03-26'),
+    },
+    {
+      episodeNumber: 6,
+      title: 'Doing the Damn Thing',
+      airDate: new Date('2026-04-02'),
+    },
+    {
+      episodeNumber: 7,
+      title: 'Survivor Smack Talk',
+      airDate: new Date('2026-04-09'),
+    },
+    {
+      episodeNumber: 8,
+      title: 'A Rift Between All of Us',
+      airDate: new Date('2026-04-16'),
+    },
+    {
+      episodeNumber: 9,
+      title: 'Welcome to the Party',
+      airDate: new Date('2026-04-23'),
+    },
+    {
+      episodeNumber: 10,
+      title: 'My Enemies Are Plottin',
+      airDate: new Date('2026-04-30'),
+    },
+    {
+      episodeNumber: 11,
+      title: 'Coconut Etiquette',
+      airDate: new Date('2026-05-07'),
+    },
+    {
+      episodeNumber: 12,
+      title: 'Icarus Time',
+      airDate: new Date('2026-05-14'),
+    },
+    {
+      episodeNumber: 13,
+      title: 'Only One of Yous Can Win',
+      airDate: new Date('2026-05-21'),
+    },
+  ],
 };
 
 export { season48 };

@@ -2,8 +2,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import {
-  SeasonWithSurvivorsForSeeding,
   SeasonCreateData,
+  EpisodeCreateData,
+  SeasonWithSurvivorsForSeeding,
 } from '../types/season-data.type';
 import { Prisma } from '@prisma/client';
 import { SeasonSurvivorSeeder } from './survivor.seeder';
@@ -27,6 +28,9 @@ export class SeasonSeeder {
 
         // Step 2: Seed survivors within the SAME transaction
         await this.seedSurvivorsInTransaction(tx, season.seasonId);
+
+        // Step 3: Seed episodes within the SAME transaction
+        await this.seedEpisodesInTransaction(tx, season.seasonId);
       });
 
       this.logger.log(
@@ -44,7 +48,7 @@ export class SeasonSeeder {
   private async createSeason(
     tx: Prisma.TransactionClient,
   ): Promise<SeasonCreateData> {
-    const { survivors, ...seasonBasicData } = this.seasonData;
+    const { survivors, episodes, ...seasonBasicData } = this.seasonData;
 
     const seasonCreateInput: SeasonCreateData = {
       ...seasonBasicData,
@@ -70,14 +74,96 @@ export class SeasonSeeder {
       return;
     }
 
-    // Create survivor seeder that works within the existing transaction
     const survivorSeeder = new SeasonSurvivorSeeder(
-      this.prisma, // Pass the service (we'll modify the seeder to accept transaction)
+      this.prisma,
       seasonId,
       this.seasonData.survivors,
     );
 
-    // Call a new method that accepts the transaction
     await survivorSeeder.seedWithTransaction(tx);
+  }
+
+  private async seedEpisodesInTransaction(
+    tx: Prisma.TransactionClient,
+    seasonId: number,
+  ): Promise<void> {
+    if (this.seasonData.episodes.length === 0) {
+      this.logger.log(`ℹ️ No episodes to seed for season ${seasonId}`);
+      return;
+    }
+
+    this.logger.log(
+      `🌱 Seeding ${this.seasonData.episodes.length} episodes for season ${seasonId}`,
+    );
+
+    try {
+      // Validate episode numbering (should start at 1 and be sequential)
+      this.validateEpisodeOrder();
+
+      // Create episodes in order
+      await this.createEpisodesInOrder(tx, seasonId);
+
+      this.logger.log(`✅ Successfully seeded episodes for season ${seasonId}`);
+    } catch (error) {
+      this.logger.error(
+        `❌ Failed to seed episodes for season ${seasonId}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  private validateEpisodeOrder(): void {
+    // Sort by episode number to validate order
+    const sortedEpisodes = [...this.seasonData.episodes].sort(
+      (a, b) => a.episodeNumber - b.episodeNumber,
+    );
+
+    for (let i = 0; i < sortedEpisodes.length; i++) {
+      const expectedNumber = i + 1;
+      const actualNumber = sortedEpisodes[i].episodeNumber;
+
+      if (actualNumber !== expectedNumber) {
+        throw new Error(
+          `Episode numbering error: Expected episode ${expectedNumber}, but found episode ${actualNumber}. Episodes must be numbered sequentially starting from 1.`,
+        );
+      }
+    }
+  }
+
+  private async createEpisodesInOrder(
+    tx: Prisma.TransactionClient,
+    seasonId: number,
+  ): Promise<void> {
+    // Sort by episode number to ensure we create them in order
+    const sortedEpisodes = [...this.seasonData.episodes].sort(
+      (a, b) => a.episodeNumber - b.episodeNumber,
+    );
+
+    for (const episodeEntry of sortedEpisodes) {
+      const episodeCreateInput: EpisodeCreateData = {
+        seasonId: seasonId,
+        episodeNumber: episodeEntry.episodeNumber,
+        title: episodeEntry.title,
+        airDate: episodeEntry.airDate,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await tx.episode.upsert({
+        where: {
+          seasonId_episodeNumber: {
+            seasonId: seasonId,
+            episodeNumber: episodeEntry.episodeNumber,
+          },
+        },
+        update: {
+          title: episodeEntry.title,
+          airDate: episodeEntry.airDate,
+          updatedAt: new Date(),
+        },
+        create: episodeCreateInput,
+      });
+    }
   }
 }

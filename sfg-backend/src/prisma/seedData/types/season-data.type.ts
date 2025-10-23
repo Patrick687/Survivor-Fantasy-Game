@@ -5,6 +5,7 @@ export type SurvivorCreateData = Prisma.SurvivorUncheckedCreateInput;
 export type SeasonCreateData = Prisma.SeasonUncheckedCreateInput;
 export type SeasonSurvivorCreateData =
   Prisma.SeasonSurvivorUncheckedCreateInput;
+export type EpisodeCreateData = Prisma.EpisodeUncheckedCreateInput;
 
 // Seeding context types - omit only what the seeder will provide
 export type SurvivorForSeeding = Omit<
@@ -22,6 +23,11 @@ export type SeasonForSeeding = Omit<
   'createdAt' | 'updatedAt'
 >;
 
+export type EpisodeForSeeding = Omit<
+  EpisodeCreateData,
+  'seasonId' | 'createdAt' | 'updatedAt'
+>;
+
 // Composite seeding type
 export type SeasonWithSurvivorsForSeeding = SeasonForSeeding & {
   survivors: Array<
@@ -29,4 +35,5 @@ export type SeasonWithSurvivorsForSeeding = SeasonForSeeding & {
       survivor: SurvivorForSeeding;
     }
   >;
+  episodes: Array<EpisodeForSeeding>;
 };

@@ -70,6 +70,7 @@ model Season {
   airEndDate      DateTime?
   leagues         League[]
   survivors       SeasonSurvivor[]
+  episodes        Episode[]
 }
 
 model League {
@@ -150,5 +151,18 @@ model SeasonSurvivor {
 
   @@unique([survivorId, seasonId])
   @@index([survivorId])
+  @@index([seasonId])
+}
+
+model Episode {
+  seasonId Int
+  season      Season   @relation(fields: [seasonId], references: [seasonId], onDelete: Cascade, onUpdate: Cascade)
+  episodeNumber Int
+  title String @default("TBD")
+  airDate DateTime
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([seasonId, episodeNumber])
   @@index([seasonId])
 }
