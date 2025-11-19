@@ -101,3 +101,35 @@ export const generateInviteCodeMutation = `
     generateInviteCode(leagueId: $leagueId, expiresInMinutes: $expiresInMinutes)
   }
 `;
+
+export const createEpisodeMutation = `
+  mutation CreateEpisode($data: CreateEpisodeDto!) {
+    createEpisode(data: $data) {
+      seasonId
+      episodeNumber
+      title
+      airDate
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const updateEpisodeMutation = `
+  mutation UpdateEpisode($data: UpdateEpisodeDto!) {
+    updateEpisode(data: $data) {
+      seasonId
+      episodeNumber
+      title
+      airDate
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const deleteEpisodeMutation = `
+  mutation DeleteEpisode($seasonId: Int!, $episodeNumber: Int!) {
+    deleteEpisode(seasonId: $seasonId, episodeNumber: $episodeNumber)
+  }
+`;

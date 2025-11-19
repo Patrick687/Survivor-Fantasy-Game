@@ -8,12 +8,16 @@ import {
   LoginDto,
   CreateLeagueDto,
   UserRole,
+  CreateEpisodeDto,
+  UpdateEpisodeDto,
 } from 'generated/graphql';
 import { CreateSeasonDto } from 'src/season/dto/create-season.dto';
 import { JwtPayload as PrismaJwtPayload } from 'src/auth/token/jwt-payload.type';
+import { EpisodeResolver } from '../../../src/season/episode/episode.resolver';
 
 type TestAppServices = {
   prismaService: PrismaService;
+  episodeResolver: EpisodeResolver;
 };
 
 export type TestJwtPayload = Omit<PrismaJwtPayload, 'userRole'> & {
@@ -27,6 +31,9 @@ export interface MutationVariables {
   createSeason: { input: CreateSeasonDto };
   createLeague: { input: CreateLeagueDto };
   generateInviteCode: { leagueId: string; expiresInMinutes: number };
+  createEpisode: { data: CreateEpisodeDto };
+  updateEpisode: { data: UpdateEpisodeDto };
+  deleteEpisode: { seasonId: number; episodeNumber: number };
 }
 
 export interface QueryVariables {
@@ -149,7 +156,8 @@ async function createTestApp(): Promise<{
 
 function getServices(app: INestApplication): TestAppServices {
   const prismaService = app.get(PrismaService);
-  return { prismaService };
+  const episodeResolver = app.get(EpisodeResolver);
+  return { prismaService, episodeResolver };
 }
 
 export default createTestApp;

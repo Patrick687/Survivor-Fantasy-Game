@@ -56,6 +56,20 @@ export class UpdateSeasonDto {
     airEndDate?: Nullable<string>;
 }
 
+export class CreateEpisodeDto {
+    seasonId: number;
+    episodeNumber: number;
+    title?: Nullable<string>;
+    airDate: DateTime;
+}
+
+export class UpdateEpisodeDto {
+    seasonId: number;
+    episodeNumber: number;
+    title?: Nullable<string>;
+    airDate?: Nullable<DateTime>;
+}
+
 export class User {
     userId: string;
     email: string;
@@ -99,6 +113,12 @@ export class SeasonEntity {
     airEndDate?: Nullable<DateTime>;
 }
 
+export class Episode {
+    episodeNumber: number;
+    title: string;
+    airDate: DateTime;
+}
+
 export class HealthCheckResult {
     status: string;
     environment: string;
@@ -115,6 +135,10 @@ export abstract class IQuery {
     abstract getSeason(seasonId: number): SeasonEntity | Promise<SeasonEntity>;
 
     abstract getCurrentSeason(): Nullable<SeasonEntity> | Promise<Nullable<SeasonEntity>>;
+
+    abstract getEpisodeBySeasonIdAndNumber(seasonId: number, episodeNumber: number): Episode | Promise<Episode>;
+
+    abstract getEpisodesBySeasonId(seasonId: number): Episode[] | Promise<Episode[]>;
 }
 
 export abstract class IMutation {
@@ -135,6 +159,12 @@ export abstract class IMutation {
     abstract updateSeason(seasonId: number, input: UpdateSeasonDto): SeasonEntity | Promise<SeasonEntity>;
 
     abstract deleteSeason(seasonId: number): boolean | Promise<boolean>;
+
+    abstract createEpisode(data: CreateEpisodeDto): Episode | Promise<Episode>;
+
+    abstract updateEpisode(data: UpdateEpisodeDto): Episode | Promise<Episode>;
+
+    abstract deleteEpisode(seasonId: number, episodeNumber: number): boolean | Promise<boolean>;
 
     abstract generateInviteCode(leagueId: string, expiresInMinutes: number): string | Promise<string>;
 

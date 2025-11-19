@@ -71,6 +71,12 @@ type SeasonEntity {
   airEndDate: DateTime
 }
 
+type Episode {
+  episodeNumber: Int!
+  title: String!
+  airDate: DateTime!
+}
+
 type HealthCheckResult {
   status: String!
   environment: String!
@@ -83,6 +89,8 @@ type Query {
   getAllSeasons: [SeasonEntity!]!
   getSeason(seasonId: Int!): SeasonEntity!
   getCurrentSeason: SeasonEntity
+  getEpisodeBySeasonIdAndNumber(seasonId: Int!, episodeNumber: Int!): Episode!
+  getEpisodesBySeasonId(seasonId: Int!): [Episode!]!
 }
 
 type Mutation {
@@ -95,6 +103,9 @@ type Mutation {
   createSeason(input: CreateSeasonDto!): SeasonEntity!
   updateSeason(seasonId: Int!, input: UpdateSeasonDto!): SeasonEntity!
   deleteSeason(seasonId: Int!): Boolean!
+  createEpisode(data: CreateEpisodeDto!): Episode!
+  updateEpisode(data: UpdateEpisodeDto!): Episode!
+  deleteEpisode(seasonId: Int!, episodeNumber: Int!): Boolean!
   generateInviteCode(leagueId: String!, expiresInMinutes: Float! = 30): String!
   joinLeagueWithToken(inviteToken: String!): LeagueMemberEntity!
 }
@@ -134,4 +145,25 @@ input UpdateSeasonDto {
   filmingLocation: String
   airStartDate: String
   airEndDate: String
+}
+
+input CreateEpisodeDto {
+  seasonId: Int!
+  episodeNumber: Int!
+  title: String = "TBD"
+  airDate: DateTime!
+}
+
+input UpdateEpisodeDto {
+  """Season ID this episode belongs to"""
+  seasonId: Int!
+
+  """Episode number within the season to update"""
+  episodeNumber: Int!
+
+  """Episode title"""
+  title: String
+
+  """When the episode airs or aired"""
+  airDate: DateTime
 }
