@@ -1,10 +1,20 @@
 import { Resolver, Query, ResolveField } from '@nestjs/graphql';
 import { HealthCheck, ServiceConnection } from './health-check.entity';
 import { HealthCheckService } from './health-check.service';
+import {
+  BadRequestError,
+  InternalServerError,
+} from 'src/common/error/operational-error';
 
 @Resolver(() => HealthCheck)
 export class HealthCheckResolver {
   constructor(private readonly healthCheckService: HealthCheckService) {}
+
+  @Query(() => HealthCheck, { name: 'UhOh', nullable: true })
+  uhOhCheck(): HealthCheck {
+    // throw new InternalServerError();
+    throw new BadRequestError('Testing a bad request error');
+  }
 
   @Query(() => HealthCheck, { name: 'health' })
   healthCheck(): HealthCheck {
