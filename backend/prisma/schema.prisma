@@ -10,6 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Ignore VS Code warning: url is required for Prisma v5/v6
   url      = env("DATABASE_URL")
 }
 
