@@ -1,25 +1,25 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType, Int } from '@nestjs/graphql';
 
 @ObjectType()
 export class ServiceConnection {
-  @Field()
+  @Field(() => String)
   name: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   host?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
   port?: number;
 
-  @Field()
+  @Field(() => Boolean)
   status: boolean;
 }
 
 @ObjectType()
 export class HealthCheck {
-  @Field()
+  @Field(() => String)
   status: string;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   timestamp?: Date;
 }
