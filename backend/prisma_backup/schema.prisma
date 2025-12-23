@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  js_target = "es2022"
 }
 
 datasource db {
