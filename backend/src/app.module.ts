@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import configuration, { NodeEnv } from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
@@ -7,6 +7,8 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { HealthCheckModule } from './health-check/health-check.module';
+import { AuthModule } from './auth/auth.module';
+import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { HealthCheckModule } from './health-check/health-check.module';
     }),
     PrismaModule,
     HealthCheckModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],

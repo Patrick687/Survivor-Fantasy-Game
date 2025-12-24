@@ -1,10 +1,7 @@
 import { Resolver, Query, ResolveField } from '@nestjs/graphql';
 import { HealthCheck, ServiceConnection } from './health-check.entity';
 import { HealthCheckService } from './health-check.service';
-import {
-  BadRequestError,
-  InternalServerError,
-} from 'src/common/error/operational-error';
+import { BadRequestError } from 'src/common/error/operational-error';
 
 @Resolver(() => HealthCheck)
 export class HealthCheckResolver {

@@ -9,6 +9,8 @@ export default () => {
   const host = process.env.HOST;
   const port = process.env.PORT;
   const databaseUrl = process.env.DATABASE_URL;
+  const jwtSecret = process.env.JWT_SECRET;
+  const jwtExpiresIn = process.env.JWT_EXPIRES_IN;
 
   if (!nodeEnv) {
     throw new Error('Missing required environment variable: NODE_ENV');
@@ -31,10 +33,20 @@ export default () => {
     throw new Error('Missing required environment variable: DATABASE_URL');
   }
 
+  if (!jwtSecret) {
+    throw new Error('Missing required environment variable: JWT_SECRET');
+  }
+
+  if (!jwtExpiresIn) {
+    throw new Error('Missing required environment variable: JWT_EXPIRES_IN');
+  }
+
   return {
     nodeEnv,
     host,
     port: portNumber,
     databaseUrl,
+    jwtSecret,
+    jwtExpiresIn,
   };
 };
