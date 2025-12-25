@@ -1,158 +1,232 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-jest';
-import { UserService } from 'src/user/user.service';
-import { Prisma } from '@prisma/client';
-import { User } from 'src/user/user.entity';
-import { JwtService } from 'src/auth/jwt/jwt.service';
-import { AuthService } from 'src/auth/auth.service';
-import { AuthSession } from 'src/auth/auth-session.entity';
-import { LoginInput } from 'src/auth/dto/login.input';
+import { UserService } from './user.service';
+import { UserRepository } from './user.repository';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { PasswordService } from './password/password.service';
+import {
+  ConflictException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { User } from './user.entity';
 
-describe('AuthService', () => {
-  let service: AuthService;
-  let userService: jest.Mocked<UserService>;
-  let jwtService: jest.Mocked<JwtService>;
+describe('UserService', () => {
+  let service: UserService;
+  let userRepository: jest.Mocked<UserRepository>;
+  let prismaService: jest.Mocked<PrismaService>;
+  let passwordService: jest.Mocked<PasswordService>;
+
+  const userEntity = {
+    id: 'uuid',
+    userName: 'test',
+    email: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    isPrivate: false,
+    createdAt: new Date('2023-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2023-01-01T00:00:00.000Z'),
+  };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService],
-    })
-      .useMocker(createMock)
-      .compile();
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        UserService,
+        { provide: UserRepository, useValue: createMock<UserRepository>() },
+        { provide: PrismaService, useValue: createMock<PrismaService>() },
+        { provide: PasswordService, useValue: createMock<PasswordService>() },
+      ],
+    }).compile();
 
-    service = module.get<AuthService>(AuthService);
-    userService = module.get(UserService);
-    jwtService = module.get(JwtService);
+    service = moduleRef.get(UserService);
+    userRepository = moduleRef.get(UserRepository);
+    prismaService = moduleRef.get(PrismaService);
+    passwordService = moduleRef.get(PasswordService);
+
+    (User as any).mapToEntity = jest
+      .fn()
+      .mockImplementation((u) => ({ ...u, mapped: true }));
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('signup', () => {
-    it('should create user and return AuthSession', async () => {
-      const userArgs: Prisma.UserCreateInput = {
-        userName: 'john',
-        email: 'john@example.com',
-      } as any;
-      const passwordArgs = { password: 'StrongP@ssw0rd' };
-      const user: User = {
-        userId: '123',
-        userName: 'john',
-        email: 'john@example.com',
-      } as any;
-      const session: AuthSession = { token: 'token', expiresAt: new Date() };
-
-      userService.createUser.mockResolvedValue(user);
-      jwtService.signWithExpiry.mockResolvedValue(session);
-
-      const result = await service.signup({ userArgs, passwordArgs });
-      expect(userService.createUser).toHaveBeenCalledWith(
-        userArgs,
-        passwordArgs,
-      );
-      expect(jwtService.signWithExpiry).toHaveBeenCalledWith({
-        sub: user.userId,
-      });
-      expect(result).toEqual(session);
+  describe('getUser', () => {
+    it('should return mapped user if found', async () => {
+      userRepository.findByUnique.mockResolvedValue(userEntity);
+      const result = await service.getUser({ id: 'uuid' });
+      expect(result).toEqual({ ...userEntity, mapped: true });
     });
 
-    it('should throw if userService.createUser throws', async () => {
-      userService.createUser.mockRejectedValue(new Error('fail'));
-      await expect(
-        service.signup({ userArgs: {} as any, passwordArgs: { password: '' } }),
-      ).rejects.toThrow('fail');
+    it('should throw NotFoundException if user not found', async () => {
+      userRepository.findByUnique.mockResolvedValue(null);
+      await expect(service.getUser({ id: 'uuid' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
-  describe('login', () => {
-    it('should validate credentials and return AuthSession', async () => {
-      const input: LoginInput = {
-        userNameOrEmail: 'john',
-        password: 'StrongP@ssw0rd',
-      } as any;
-      const user: User = {
-        userId: '123',
-        userName: 'john',
-        email: 'john@example.com',
-      } as any;
-      const session: AuthSession = { token: 'token', expiresAt: new Date() };
-
-      userService.validateUserCredentials.mockResolvedValue(user);
-      jwtService.signWithExpiry.mockResolvedValue(session);
-
-      const result = await service.login(input);
-      expect(userService.validateUserCredentials).toHaveBeenCalledWith(
-        input.userNameOrEmail,
-        input.password,
+  describe('createUser', () => {
+    it('should create user and return mapped user', async () => {
+      jest
+        .spyOn<any, any>(service as any, 'validateSignup')
+        .mockResolvedValue(undefined);
+      // Mock $transaction to call the callback with a tx object
+      const tx = {
+        $executeRaw: jest.fn(),
+        $executeRawUnsafe: jest.fn(),
+        $queryRaw: jest.fn(),
+        $queryRawUnsafe: jest.fn(),
+      };
+      prismaService.$transaction.mockImplementation(async (cb) =>
+        cb(tx as any),
       );
-      expect(jwtService.signWithExpiry).toHaveBeenCalledWith({
-        sub: user.userId,
+      userRepository.create.mockResolvedValue(userEntity);
+      passwordService.registerPasswordForUser.mockResolvedValue({
+        id: 'pw-id',
+        createdAt: new Date('2023-01-01T00:00:00.000Z'),
+        hash: 'hashed',
+        userId: userEntity.id,
       });
-      expect(result).toEqual(session);
+
+      const result = await service.createUser(userEntity as any, {
+        password: 'Password123!',
+      });
+      expect(result).toEqual({ ...userEntity, mapped: true });
     });
 
-    it('should throw if userService.validateUserCredentials throws', async () => {
-      userService.validateUserCredentials.mockRejectedValue(
-        new Error('invalid'),
+    it('should throw ConflictException if email is not available', async () => {
+      jest
+        .spyOn<any, any>(service as any, 'isEmailAvailable')
+        .mockResolvedValue(false);
+      jest
+        .spyOn<any, any>(service as any, 'isUserNameAvailable')
+        .mockResolvedValue(true);
+      await expect(service['validateSignup'](userEntity)).rejects.toThrow(
+        ConflictException,
       );
-      await expect(
-        service.login({ userNameOrEmail: 'john', password: 'bad' } as any),
-      ).rejects.toThrow('invalid');
+    });
+
+    it('should throw ConflictException if username is not available', async () => {
+      jest
+        .spyOn<any, any>(service as any, 'isEmailAvailable')
+        .mockResolvedValue(true);
+      jest
+        .spyOn<any, any>(service as any, 'isUserNameAvailable')
+        .mockResolvedValue(false);
+      await expect(service['validateSignup'](userEntity)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
-  describe('getUserFromSession', () => {
-    it('should verify token and return user', async () => {
-      const session: AuthSession = { token: 'token', expiresAt: new Date() };
-      const payload = { sub: '123' };
-      const user: User = {
-        userId: '123',
-        userName: 'john',
-        email: 'john@example.com',
-      } as any;
+  describe('validateUserCredentials', () => {
+    it('should return mapped user if credentials are valid', async () => {
+      userRepository.findByUsernameOrEmail.mockResolvedValue(userEntity);
+      passwordService.validatePasswordForUser.mockResolvedValue(true);
 
-      jwtService.verifyAsync.mockResolvedValue(payload);
-      userService.getUser.mockResolvedValue(user);
-
-      const result = await service.getUserFromSession(session);
-      expect(jwtService.verifyAsync).toHaveBeenCalledWith(session.token);
-      expect(userService.getUser).toHaveBeenCalledWith({ id: payload.sub });
-      expect(result).toEqual(user);
+      const result = await service.validateUserCredentials(
+        'test',
+        'Password123!',
+      );
+      expect(result).toEqual({ ...userEntity, mapped: true });
     });
 
-    it('should throw if jwtService.verifyAsync throws', async () => {
-      jwtService.verifyAsync.mockRejectedValue(new Error('bad token'));
+    it('should throw UnauthorizedException if user not found', async () => {
+      userRepository.findByUsernameOrEmail.mockResolvedValue(null);
       await expect(
-        service.getUserFromSession({ token: 'bad', expiresAt: new Date() }),
-      ).rejects.toThrow('bad token');
+        service.validateUserCredentials('test', 'Password123!'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw if userService.getUser throws', async () => {
-      jwtService.verifyAsync.mockResolvedValue({ sub: '123' });
-      userService.getUser.mockRejectedValue(new Error('not found'));
+    it('should throw UnauthorizedException if password is invalid', async () => {
+      userRepository.findByUsernameOrEmail.mockResolvedValue(userEntity);
+      passwordService.validatePasswordForUser.mockResolvedValue(false);
       await expect(
-        service.getUserFromSession({ token: 'token', expiresAt: new Date() }),
-      ).rejects.toThrow('not found');
+        service.validateUserCredentials('test', 'Password123!'),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 
-  describe('setupAndCreateAuthSessionForUser (private)', () => {
-    it('should create AuthSession for user', async () => {
-      const user: User = {
-        userId: '123',
-        userName: 'john',
-        email: 'john@example.com',
-      } as any;
-      const session: AuthSession = { token: 'token', expiresAt: new Date() };
-      jwtService.signWithExpiry.mockResolvedValue(session);
+  describe('isUserNameAvailable', () => {
+    it('should return true if username is available', async () => {
+      userRepository.findByUnique.mockResolvedValue(null);
+      const result = await (service as any).isUserNameAvailable('test');
+      expect(result).toBe(true);
+    });
 
-      // @ts-expect-error: private method
-      const result = await service.setupAndCreateAuthSessionForUser(user);
-      expect(jwtService.signWithExpiry).toHaveBeenCalledWith({
-        sub: user.userId,
+    it('should return false if username is taken', async () => {
+      userRepository.findByUnique.mockResolvedValue(userEntity);
+      const result = await (service as any).isUserNameAvailable('test');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('isEmailAvailable', () => {
+    it('should return true if email is available', async () => {
+      userRepository.findByUnique.mockResolvedValue(null);
+      const result = await (service as any).isEmailAvailable(
+        'test@example.com',
+      );
+      expect(result).toBe(true);
+    });
+
+    it('should return false if email is taken', async () => {
+      userRepository.findByUnique.mockResolvedValue(userEntity);
+      const result = await (service as any).isEmailAvailable(
+        'test@example.com',
+      );
+      expect(result).toBe(false);
+    });
+  });
+
+  // Additional edge cases for coverage
+  describe('validateSignup', () => {
+    it('should resolve if both email and username are available', async () => {
+      jest
+        .spyOn<any, any>(service as any, 'isEmailAvailable')
+        .mockResolvedValue(true);
+      jest
+        .spyOn<any, any>(service as any, 'isUserNameAvailable')
+        .mockResolvedValue(true);
+      await expect(
+        service['validateSignup'](userEntity),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('private $transaction logic', () => {
+    it('should pass tx object to repository and password service', async () => {
+      jest
+        .spyOn<any, any>(service as any, 'validateSignup')
+        .mockResolvedValue(undefined);
+      const tx = {
+        $executeRaw: jest.fn(),
+        $executeRawUnsafe: jest.fn(),
+        $queryRaw: jest.fn(),
+        $queryRawUnsafe: jest.fn(),
+      };
+      prismaService.$transaction.mockImplementation(async (cb) =>
+        cb(tx as any),
+      );
+      userRepository.create.mockResolvedValue(userEntity);
+      passwordService.registerPasswordForUser.mockResolvedValue({
+        id: 'pw-id',
+        createdAt: new Date('2023-01-01T00:00:00.000Z'),
+        hash: 'hashed',
+        userId: userEntity.id,
       });
-      expect(result).toEqual(session);
+
+      await service.createUser(userEntity as any, { password: 'Password123!' });
+      expect(userRepository.create).toHaveBeenCalledWith(
+        { data: userEntity },
+        tx,
+      );
+      expect(passwordService.registerPasswordForUser).toHaveBeenCalledWith(
+        { rawPassword: 'Password123!', userId: userEntity.id },
+        tx,
+      );
     });
   });
 });

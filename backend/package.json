@@ -17,11 +17,7 @@
     "migrate:prod": "dotenv -e .env.production -- prisma migrate deploy",
     "prisma:generate": "npx dotenv -e .env.development -- npx prisma generate",
     "test:integration": "dotenv -e .env.test -- jest --config ./test/integration/jest-integration-config.json --runInBand",
-    "test:unit": "dotenv -e .env.test -- jest --config ./test/unit/jest-unit-config.json",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+    "test:unit": "dotenv -e .env.test -- jest --config ./test/unit/jest-unit-config.json"
   },
   "dependencies": {
     "@apollo/server": "^5.2.0",

@@ -5,9 +5,24 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "collectCoverageFrom": ["**/*.(t|j)s"],
-  "coverageDirectory": "../../coverage/unit",
+  "collectCoverage": true,
+  "collectCoverageFrom": [
+    "**/*.(t|j)s",
+    "!**/*.integration.spec.ts",
+    "!**/*.resolver.ts",
+    "!**/*.repository.ts",
+    "!**/*.module.ts",
+    "!**/*.entity.ts",
+    "!main.ts",
+    "!app.module.ts",
+    "!common/tracing/instrumentation.ts",
+    "!prisma/prisma.module.ts",
+    "!user/password/password.module.ts",
+    "!user/profile/profile-settings.entity.ts",
+    "!test/**"
+  ],
   "testEnvironment": "node",
+  "coverageReporters": ["text"],
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/$1"
   }

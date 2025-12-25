@@ -10,5 +10,8 @@
   "globalTeardown": "../test/integration/jest-integration-global-teardown.ts",
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/$1"
-  }
+  },
+  "collectCoverage": true,
+  "collectCoverageFrom": ["**/*.resolver.ts", "**/*.repository.ts"],
+  "coverageReporters": ["text"]
 }
