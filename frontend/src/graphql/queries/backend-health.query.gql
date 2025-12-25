@@ -1,0 +1,12 @@
+query Health {
+  health {
+    status
+    timestamp
+    services {
+      host
+      name
+      port
+      status
+    }
+  }
+}
