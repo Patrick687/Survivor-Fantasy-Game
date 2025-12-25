@@ -1,32 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ServiceConnection } from './health-check.entity';
-
-function extractHostAndPort(databaseUrl: string): {
-  host: string;
-  port: number;
-} {
-  try {
-    const url = new URL(databaseUrl.replace('postgresql://', 'http://'));
-    if (!url) {
-      throw new Error('Hmm... unable to parse URL');
-    }
-    return {
-      host: url.hostname,
-      port: Number(url.port),
-    };
-  } catch {
-    return { host: 'unknown', port: 0 };
-  }
-}
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class HealthCheckService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async getHealthStatus(): Promise<ServiceConnection[]> {
-    const databaseUrl = process.env.DATABASE_URL || '';
-    const { host, port } = extractHostAndPort(databaseUrl);
+    const databaseUrl = this.configService.getOrThrow<string>('databaseUrl');
+    const { host, port } = this.extractHostAndPort(databaseUrl);
 
     let dbStatus = false;
     try {
@@ -44,5 +30,23 @@ export class HealthCheckService {
         status: dbStatus,
       },
     ];
+  }
+
+  private extractHostAndPort(databaseUrl: string): {
+    host: string;
+    port: number;
+  } {
+    try {
+      const url = new URL(databaseUrl.replace('postgresql://', 'http://'));
+      if (!url) {
+        throw new Error('Hmm... unable to parse URL');
+      }
+      return {
+        host: url.hostname,
+        port: Number(url.port),
+      };
+    } catch {
+      return { host: 'unknown', port: 0 };
+    }
   }
 }

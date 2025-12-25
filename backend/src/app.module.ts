@@ -17,7 +17,7 @@ import { JwtModule } from './auth/jwt/jwt.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
-      envFilePath: `.env.${process.env.NODE_ENV || NodeEnv.Development}`,
+      envFilePath: `.env.${process.env.NODE_ENV}`,
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,

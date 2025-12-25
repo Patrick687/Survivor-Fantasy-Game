@@ -30,9 +30,7 @@ type Mutation {
 }
 
 type Query {
-  UhOh: HealthCheck
   health: HealthCheck!
-  me: User
 }
 
 type ServiceConnection {
@@ -43,7 +41,6 @@ type ServiceConnection {
 }
 
 input SignupInput {
-  confirmPassword: String!
   email: String!
   firstName: String
   isPrivate: Boolean!

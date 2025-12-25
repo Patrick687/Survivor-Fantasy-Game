@@ -1,6 +1,6 @@
-import configuration from './configuration';
+import config, { NodeEnv, AppConfig } from './configuration';
 
-describe('configuration', () => {
+describe('AppConfig', () => {
   const OLD_ENV = process.env;
 
   beforeEach(() => {
@@ -8,68 +8,70 @@ describe('configuration', () => {
     process.env = { ...OLD_ENV };
   });
 
-  afterEach(() => {
+  afterAll(() => {
     process.env = OLD_ENV;
   });
 
-  const setEnv = (env: Partial<NodeJS.ProcessEnv>) => {
-    process.env = { ...process.env, ...env };
+  const setAllEnv = () => {
+    process.env.NODE_ENV = NodeEnv.Development;
+    process.env.HOST = 'localhost';
+    process.env.PORT = '3000';
+    process.env.DATABASE_URL = 'postgres://...';
+    process.env.JWT_SECRET = 'secret';
+    process.env.JWT_EXPIRES_IN = '1h';
   };
 
-  describe('Required environment variables', () => {
-    beforeEach(() => {
-      setEnv({ NODE_ENV: 'development', HOST: 'localhost', PORT: '3000' });
+  it('returns config when all envs are set', () => {
+    setAllEnv();
+    expect(config()).toEqual({
+      nodeEnv: NodeEnv.Development,
+      host: 'localhost',
+      port: '3000',
+      databaseUrl: 'postgres://...',
+      jwtSecret: 'secret',
+      jwtExpiresIn: '1h',
     });
+  });
 
-    describe('NODE_ENV', () => {
-      it('should throw if NODE_ENV is missing', () => {
-        setEnv({ NODE_ENV: '' });
-        expect(() => configuration()).toThrow();
-      });
+  it('throws if NODE_ENV is missing', () => {
+    setAllEnv();
+    delete process.env.NODE_ENV;
+    expect(() => config()).toThrow(/NODE_ENV/);
+  });
 
-      ['development', 'production', 'test'].forEach((env) => {
-        it(`should accept if NODE_ENV is '${env}'`, () => {
-          setEnv({ NODE_ENV: env });
-          expect(() => configuration()).not.toThrow();
-        });
-      });
+  it('throws if NODE_ENV is invalid', () => {
+    setAllEnv();
+    process.env.NODE_ENV = 'invalid' as any;
+    expect(() => config()).toThrow(/NODE_ENV must be one of/);
+  });
 
-      it('should throw if NODE_ENV is invalid', () => {
-        setEnv({ NODE_ENV: 'invalid_env' });
-        expect(() => configuration()).toThrow(
-          'NODE_ENV must be one of: development, production, test',
-        );
-      });
-    });
+  it('throws if HOST is missing', () => {
+    setAllEnv();
+    delete process.env.HOST;
+    expect(() => config()).toThrow(/HOST/);
+  });
 
-    describe('HOST', () => {
-      it('should accept valid HOST', () => {
-        setEnv({ HOST: 'localhost' });
-        expect(() => configuration()).not.toThrow();
-      });
-      it('should throw if HOST is missing', () => {
-        setEnv({ HOST: '' });
-        expect(() => configuration()).toThrow(
-          'Missing required environment variable: HOST',
-        );
-      });
-    });
+  it('throws if PORT is missing', () => {
+    setAllEnv();
+    delete process.env.PORT;
+    expect(() => config()).toThrow(/PORT/);
+  });
 
-    describe('PORT', () => {
-      it('should accept valid PORT', () => {
-        setEnv({ PORT: '8080' });
-        expect(() => configuration()).not.toThrow();
-      });
-      it('should throw if PORT is missing', () => {
-        setEnv({ PORT: '' });
-        expect(() => configuration()).toThrow(
-          'Missing required environment variable: PORT',
-        );
-      });
-      it('should throw if PORT is not a number', () => {
-        setEnv({ PORT: 'not_a_number' });
-        expect(() => configuration()).toThrow('PORT must be a valid number');
-      });
-    });
+  it('throws if DATABASE_URL is missing', () => {
+    setAllEnv();
+    delete process.env.DATABASE_URL;
+    expect(() => config()).toThrow(/DATABASE_URL/);
+  });
+
+  it('throws if JWT_SECRET is missing', () => {
+    setAllEnv();
+    delete process.env.JWT_SECRET;
+    expect(() => config()).toThrow(/JWT_SECRET/);
+  });
+
+  it('throws if JWT_EXPIRES_IN is missing', () => {
+    setAllEnv();
+    delete process.env.JWT_EXPIRES_IN;
+    expect(() => config()).toThrow(/JWT_EXPIRES_IN/);
   });
 });

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-const ms = require('ms');
+type MsFunction = ((value: string) => number) &
+  ((value: number, options?: { long: boolean }) => string);
+import _ms from 'ms';
+const ms = _ms as MsFunction;
 
 type JwtPayload = {
   sub: string; //userid
@@ -21,10 +24,7 @@ export class JwtService {
   async signWithExpiry(
     payload: JwtPayload,
   ): Promise<{ token: string; expiresAt: Date }> {
-    const expiresIn = this.configService.getOrThrow<string>(
-      'JWT_EXPIRES_IN',
-      '1h',
-    );
+    const expiresIn = this.configService.getOrThrow<string>('JWT_EXPIRES_IN');
     const expiresMs = ms(expiresIn);
     const expiresAt = new Date(
       Date.now() + (typeof expiresMs === 'number' ? expiresMs : 0),

@@ -6,7 +6,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { AuthSession } from './auth-session.entity';
-import { NotImplementedException } from '@nestjs/common';
 import { SignupInput } from './dto/signup.input';
 import { AuthService } from './auth.service';
 import { User } from 'src/user/user.entity';

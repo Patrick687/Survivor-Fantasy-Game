@@ -10,6 +10,7 @@ export class LoginInput {
   userNameOrEmail: string;
 
   @Field({ nullable: false, name: 'password' })
+  @Trim()
   @IsNotEmpty({ message: 'Password is required.' })
   password: string;
 }

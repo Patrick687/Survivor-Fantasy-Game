@@ -5,7 +5,6 @@ import { UserService } from 'src/user/user.service';
 import { Prisma } from '@prisma/client';
 import { JwtService } from './jwt/jwt.service';
 import { LoginInput } from './dto/login.input';
-const ms = require('ms');
 
 type JwtPayload = {
   sub: string;

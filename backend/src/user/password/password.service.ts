@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PasswordRepository } from './password.repository';
-import { Prisma } from '@prisma/client';
+import { Password, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PasswordService {
@@ -49,7 +49,7 @@ export class PasswordService {
       rawPassword: string;
     },
     tx?: Prisma.TransactionClient,
-  ): Promise<any> {
+  ): Promise<Password> {
     const encryptedPassword = await this.encryptPassword(args.rawPassword);
 
     return await this.passwordRepository.create(

@@ -7,7 +7,6 @@ import {
   MinLength,
   MaxLength,
   IsBoolean,
-  ValidateIf,
 } from 'class-validator';
 import { Trim } from 'src/common/dto/trim.decorator';
 
@@ -61,11 +60,6 @@ export class SignupInput {
     message: 'Password must contain at least one special character.',
   })
   password: string;
-
-  @Field()
-  @ValidateIf((o) => o.password)
-  @IsNotEmpty()
-  confirmPassword: string;
 
   @Field()
   @IsBoolean()

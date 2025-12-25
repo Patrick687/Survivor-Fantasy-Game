@@ -1,9 +1,9 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 @ObjectType()
 export class AuthSession {
-  @Field()
+  @Field(() => String, { nullable: false })
   token: string;
 
-  @Field(() => Date)
+  @Field(() => Date, { nullable: false })
   expiresAt: Date;
 }
