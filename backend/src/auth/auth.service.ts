@@ -53,7 +53,9 @@ export class AuthService {
   }
 
   async getUserFromSession(session: AuthSession): Promise<User> {
-    const payload: JwtPayload = await this.jwtService.verify(session.token);
+    const payload: JwtPayload = await this.jwtService.verifyAsync(
+      session.token,
+    );
     const user: User = await this.userService.getUser({ id: payload.sub });
     return user;
   }

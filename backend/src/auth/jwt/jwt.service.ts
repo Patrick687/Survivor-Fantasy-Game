@@ -14,19 +14,32 @@ export class JwtService {
     private readonly configService: ConfigService,
   ) {}
 
+  private getJwtSecret(): string {
+    return this.configService.getOrThrow<string>('JWT_SECRET');
+  }
+
   async signWithExpiry(
     payload: JwtPayload,
   ): Promise<{ token: string; expiresAt: Date }> {
-    const expiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '1h');
+    const expiresIn = this.configService.getOrThrow<string>(
+      'JWT_EXPIRES_IN',
+      '1h',
+    );
     const expiresMs = ms(expiresIn);
     const expiresAt = new Date(
       Date.now() + (typeof expiresMs === 'number' ? expiresMs : 0),
     );
-    console.log('JWT_SECRET:', this.configService.get<string>('JWT_SECRET'));
-    const token = await this.jwtService.signAsync(payload);
+
+    const token = await this.jwtService.signAsync(payload, {
+      secret: this.getJwtSecret(),
+    });
     return { token, expiresAt };
   }
-  async verify(token: string) {
-    return this.jwtService.verifyAsync(token);
+
+  async verifyAsync(token: string): Promise<JwtPayload> {
+    const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+      secret: this.getJwtSecret(),
+    });
+    return payload;
   }
 }

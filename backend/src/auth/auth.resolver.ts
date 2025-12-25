@@ -11,11 +11,13 @@ import { SignupInput } from './dto/signup.input';
 import { AuthService } from './auth.service';
 import { User } from 'src/user/user.entity';
 import { LoginInput } from './dto/login.input';
+import { Public } from 'src/common/decorator/public.decorator';
 
 @Resolver(() => AuthSession)
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Mutation(() => AuthSession, { nullable: false, name: 'signup' })
   async signup(@Args('input') input: SignupInput): Promise<AuthSession> {
     return await this.authService.signup({
@@ -32,6 +34,7 @@ export class AuthResolver {
     });
   }
 
+  @Public()
   @Mutation(() => AuthSession, { nullable: false, name: 'login' })
   async login(@Args('input') input: LoginInput): Promise<AuthSession> {
     return await this.authService.login(input);

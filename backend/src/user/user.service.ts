@@ -87,13 +87,21 @@ export class UserService {
 
   private async isUserNameAvailable(userName: string): Promise<boolean> {
     const user = await this.userRepository.findByUnique({
-      where: { userName },
+      where: {
+        userName: userName,
+      },
+      ...(userName && { userName: { equals: userName, mode: 'insensitive' } }),
     });
     return !user;
   }
 
   private async isEmailAvailable(email: string): Promise<boolean> {
-    const user = await this.userRepository.findByUnique({ where: { email } });
+    const user = await this.userRepository.findByUnique({
+      where: {
+        email: email,
+      },
+      ...(email && { email: { equals: email, mode: 'insensitive' } }),
+    });
     return !user;
   }
 }

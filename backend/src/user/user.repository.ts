@@ -9,11 +9,24 @@ export class UserRepository extends BaseRepository {
     super(prismaService);
   }
 
+  // In your user.repository.ts
   async findByUnique(
     args: Prisma.UserFindUniqueArgs,
     tx?: Prisma.TransactionClient,
   ): Promise<User | null> {
-    return this.getPrismaClient(tx).user.findUnique(args);
+    return this.getPrismaClient(tx).user.findFirst({
+      where: {
+        ...args.where,
+        // For username
+        ...(args.where.userName && {
+          userName: { equals: args.where.userName, mode: 'insensitive' },
+        }),
+        // For email
+        ...(args.where.email && {
+          email: { equals: args.where.email, mode: 'insensitive' },
+        }),
+      },
+    });
   }
 
   async findByUsernameOrEmail(
