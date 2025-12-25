@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 
 import configuration, { NodeEnv } from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';

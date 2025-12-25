@@ -8,6 +8,9 @@ function extractHostAndPort(databaseUrl: string): {
 } {
   try {
     const url = new URL(databaseUrl.replace('postgresql://', 'http://'));
+    if (!url) {
+      throw new Error('Hmm... unable to parse URL');
+    }
     return {
       host: url.hostname,
       port: Number(url.port),
