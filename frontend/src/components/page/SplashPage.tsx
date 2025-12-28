@@ -12,10 +12,10 @@ export default function SplashPage() {
                 </p>
                 <div id="splash-actions" className="flex gap-4 w-full justify-center">
                     <Link to="/signup" className="w-1/2">
-                        <Button variant="primary" size="full">Sign Up</Button>
+                        <Button variant="primary">Sign Up</Button>
                     </Link>
                     <Link to="/login" className="w-1/2">
-                        <Button variant="secondary" size="full">Login</Button>
+                        <Button variant="secondary">Login</Button>
                     </Link>
                 </div>
             </Card>
