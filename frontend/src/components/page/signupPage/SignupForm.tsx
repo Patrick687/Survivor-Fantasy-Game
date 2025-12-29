@@ -49,7 +49,7 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupForm() {
     const { doSignup, loading, error } = useSignup();
-    const { register, handleSubmit, setError, formState: { errors, isValid, isSubmitting, submitCount } } = useForm<Omit<SignupFormData, 'isPrivate'>>({
+    const { register, handleSubmit, setError, formState: { errors, isValid, isSubmitting } } = useForm<Omit<SignupFormData, 'isPrivate'>>({
         mode: 'onChange',
         resolver: zodResolver(signupSchema),
     });
@@ -83,6 +83,7 @@ export default function SignupForm() {
             <form id="signup-form" onSubmit={handleSubmit(onSubmit)}>
                 <FormInput
                     label={{ text: 'Email', textSize: 'text-md' }}
+                    autoComplete="email"
                     {...register("email")}
                     error={{ text: errors.email?.message, textSize: 'text-sm' }}
                     disabled={loading}
@@ -96,6 +97,7 @@ export default function SignupForm() {
                 <FormInput
                     label={{ text: 'Password', textSize: 'text-md' }}
                     type="password"
+                    autoComplete="new-password"
                     {...register("password")}
                     error={{ text: errors.password?.message, textSize: 'text-sm' }}
                     disabled={loading}
@@ -103,18 +105,21 @@ export default function SignupForm() {
                 <FormInput
                     label={{ text: 'Confirm Password', textSize: 'text-md' }}
                     type="password"
+                    autoComplete="new-password"
                     {...register("confirmPassword")}
                     error={{ text: errors.confirmPassword?.message, textSize: 'text-sm' }}
                     disabled={loading}
                 />
                 <FormInput
                     label={{ text: 'First Name', textSize: 'text-md' }}
+                    autoComplete="given-name"
                     {...register("firstName")}
                     error={{ text: errors.firstName?.message, textSize: 'text-sm' }}
                     disabled={loading}
                 />
                 <FormInput
                     label={{ text: 'Last Name', textSize: 'text-md' }}
+                    autoComplete="family-name"
                     {...register("lastName")}
                     error={{ text: errors.lastName?.message, textSize: 'text-sm' }}
                     disabled={loading}

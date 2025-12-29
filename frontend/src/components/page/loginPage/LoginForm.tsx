@@ -17,7 +17,7 @@ const loginSchema = z.object({
 
 export default function LoginForm() {
     const { doLogin, data: loginResponseData, loading: loginLoading, error: loginError } = useLogin();
-    const { register, handleSubmit, formState: { errors, isValid, isSubmitting, submitCount } } = useForm<LoginFormData>({
+    const { register, handleSubmit, formState: { errors, isValid, isSubmitting } } = useForm<LoginFormData>({
         mode: 'onChange',
         resolver: zodResolver(loginSchema),
     });
