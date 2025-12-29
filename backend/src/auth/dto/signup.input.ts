@@ -17,7 +17,7 @@ export class SignupInput {
   @MinLength(1)
   @MaxLength(120)
   @Matches(/^[A-Za-z]+$/, {
-    message: 'First name must be alphabetic with no spaces.',
+    message: 'Alphabetic characters (no spaces) only.',
   })
   @Trim()
   firstName?: string;
@@ -27,7 +27,7 @@ export class SignupInput {
   @MinLength(1)
   @MaxLength(120)
   @Matches(/^[A-Za-z]+$/, {
-    message: 'Last name must be alphabetic with no spaces.',
+    message: 'Alphabetic characters (no spaces) only.',
   })
   @Trim()
   lastName?: string;
@@ -37,7 +37,7 @@ export class SignupInput {
   @MinLength(6)
   @MaxLength(24)
   @Matches(/^[A-Za-z0-9]+$/, {
-    message: 'Username must be alphanumeric with no spaces.',
+    message: 'Alphanumeric characters (no spaces) only.',
   })
   @Trim()
   userName: string;
@@ -48,16 +48,18 @@ export class SignupInput {
   email: string;
 
   @Field()
-  @MinLength(8)
+  @MinLength(8, {
+    message: 'Must be at least 8 characters long.',
+  })
   @Matches(/[A-Z]/, {
-    message: 'Password must contain at least one uppercase letter.',
+    message: 'Must contain at least one uppercase letter.',
   })
   @Matches(/[a-z]/, {
-    message: 'Password must contain at least one lowercase letter.',
+    message: 'Must contain at least one lowercase letter.',
   })
-  @Matches(/[0-9]/, { message: 'Password must contain at least one number.' })
+  @Matches(/[0-9]/, { message: 'Must contain at least one number.' })
   @Matches(/[^A-Za-z0-9]/, {
-    message: 'Password must contain at least one special character.',
+    message: 'Must contain at least one special character.',
   })
   password: string;
 

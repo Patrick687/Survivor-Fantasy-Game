@@ -10,13 +10,38 @@ import FormContainer from "../../ui/form/FormContainer";
 import { FormError } from "../../ui/form/FormError";
 
 
+const alphaNoSpace = /^[A-Za-z]+$/;
+const alphanumericNoSpace = /^[A-Za-z0-9]+$/;
+
 const signupSchema = z.object({
-    email: z.string().email("Invalid email").min(1, "Required"),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    userName: z.string().min(1, "Required"),
-    password: z.string().min(1, "Required"),
+    email: z.string()
+        .min(1, "Required")
+        .email("Invalid email"),
+    firstName: z.string()
+        .max(120, "Max 120 characters")
+        .regex(alphaNoSpace, "Alphabetic characters (no spaces) only.")
+        .optional()
+        .or(z.literal('').transform(() => undefined)),
+    lastName: z.string()
+        .max(120, "Max 120 characters")
+        .regex(alphaNoSpace, "Alphabetic characters (no spaces) only.")
+        .optional()
+        .or(z.literal('').transform(() => undefined)),
+    userName: z.string()
+        .min(6, "Must be at least 6 characters")
+        .max(24, "Max 24 characters")
+        .regex(alphanumericNoSpace, "Alphanumeric characters (no spaces) only."),
+    password: z.string()
+        .min(8, "Must be at least 8 characters long.")
+        .regex(/[A-Z]/, "Must contain at least one uppercase letter.")
+        .regex(/[a-z]/, "Must contain at least one lowercase letter.")
+        .regex(/[0-9]/, "Must contain at least one number.")
+        .regex(/[^A-Za-z0-9]/, "Must contain at least one special character."),
+    confirmPassword: z.string().min(1, "Please confirm your password."),
     isPrivate: z.preprocess(val => val === 'on' || val === true, z.boolean()).default(false),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
 });
 
 type SignupFormData = z.infer<typeof signupSchema>;
@@ -33,8 +58,10 @@ export default function SignupForm() {
 
     const onSubmit: SubmitHandler<Omit<SignupFormData, 'isPrivate'>> = async (formData) => {
         try {
+            // Omit confirmPassword before sending to backend
+            const { confirmPassword, ...rest } = formData;
             const result = await doSignup(
-                { ...formData, isPrivate: false },
+                { ...rest, isPrivate: false },
                 (serverErrors) => {
                     console.log('Server validation errors:', serverErrors);
                     Object.entries(serverErrors).forEach(([field, message]) => {
@@ -61,18 +88,6 @@ export default function SignupForm() {
                     disabled={loading}
                 />
                 <FormInput
-                    label={{ text: 'First Name', textSize: 'text-md' }}
-                    {...register("firstName")}
-                    error={{ text: errors.firstName?.message, textSize: 'text-sm' }}
-                    disabled={loading}
-                />
-                <FormInput
-                    label={{ text: 'Last Name', textSize: 'text-md' }}
-                    {...register("lastName")}
-                    error={{ text: errors.lastName?.message, textSize: 'text-sm' }}
-                    disabled={loading}
-                />
-                <FormInput
                     label={{ text: 'Username', textSize: 'text-md' }}
                     {...register("userName")}
                     error={{ text: errors.userName?.message, textSize: 'text-sm' }}
@@ -83,6 +98,25 @@ export default function SignupForm() {
                     type="password"
                     {...register("password")}
                     error={{ text: errors.password?.message, textSize: 'text-sm' }}
+                    disabled={loading}
+                />
+                <FormInput
+                    label={{ text: 'Confirm Password', textSize: 'text-md' }}
+                    type="password"
+                    {...register("confirmPassword")}
+                    error={{ text: errors.confirmPassword?.message, textSize: 'text-sm' }}
+                    disabled={loading}
+                />
+                <FormInput
+                    label={{ text: 'First Name', textSize: 'text-md' }}
+                    {...register("firstName")}
+                    error={{ text: errors.firstName?.message, textSize: 'text-sm' }}
+                    disabled={loading}
+                />
+                <FormInput
+                    label={{ text: 'Last Name', textSize: 'text-md' }}
+                    {...register("lastName")}
+                    error={{ text: errors.lastName?.message, textSize: 'text-sm' }}
                     disabled={loading}
                 />
                 <FormButton disabled={isDisabled} loading={loading} padding="py-3 w-full">Sign Up</FormButton>

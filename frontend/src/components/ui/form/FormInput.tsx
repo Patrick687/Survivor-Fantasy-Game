@@ -1,5 +1,6 @@
 import React from "react";
-import { FaCircleExclamation } from "react-icons/fa6";
+import ErrorIconWithOverlay from "./ErrorIconWithOverlay";
+import FormLabel from "./FormLabel";
 
 export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: {
@@ -19,74 +20,28 @@ const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
         const [showOverlay, setShowOverlay] = React.useState(false);
         const [locked, setLocked] = React.useState(false);
 
-        // Show overlay on hover/focus only if not locked
-        const handleMouseEnter = () => {
-            if (!locked) setShowOverlay(true);
-        };
-        const handleMouseLeave = () => {
-            if (!locked) setShowOverlay(false);
-        };
-        // Toggle lock on click
-        const handleIconClick = (e: React.MouseEvent) => {
-            e.preventDefault();
-            setLocked((prev) => {
-                const newLocked = !prev;
-                setShowOverlay(newLocked);
-                return newLocked;
-            });
-        };
-        // Unlock overlay if clicking outside
-        React.useEffect(() => {
-            if (!locked) return;
-            const handleClickOutside = (e: MouseEvent) => {
-                // Only close if click is outside the icon or overlay
-                const icon = document.getElementById(`forminput-error-icon-${id}`);
-                const overlay = document.getElementById(`forminput-error-overlay-${id}`);
-                if (
-                    icon && !icon.contains(e.target as Node) &&
-                    overlay && !overlay.contains(e.target as Node)
-                ) {
-                    setLocked(false);
-                    setShowOverlay(false);
-                }
-            };
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
-        }, [locked, id]);
+        const errorText = error?.text?.trim();
+
         const labelText = label?.text?.trim();
         const labelTextSize = label?.textSize || 'text-sm';
-        const labelColor = label?.color || 'text-pacific-blue-900 dark:text-pearl-aqua-100';
+        const labelColor = errorText ? 'text-red-500' : (label?.color || 'text-pacific-blue-900 dark:text-pearl-aqua-100');
 
-        const errorText = error?.text?.trim();
-        const errorTextSize = error?.textSize || 'text-xs';
-        const errorColor = error?.color || 'text-red-500';
 
         return (
             <div className="mb-4 text-lg relative">
                 {(labelText || errorText) && (
                     <div className="flex items-center justify-between mb-1">
                         {labelText && (
-                            <label
-                                htmlFor={id}
-                                className={`block font-medium ${labelColor} ${labelTextSize}`}
-                            >
-                                {labelText}
-                            </label>
+                            <FormLabel htmlFor={id} text={labelText} textSize={labelTextSize} color={labelColor} />
                         )}
                         {errorText && (
-                            <div className="relative ml-2 flex items-center">
-                                <FaCircleExclamation
-                                    id={`forminput-error-icon-${id}`}
-                                    className="text-red-500 cursor-pointer"
-                                    tabIndex={0}
-                                    onMouseEnter={handleMouseEnter}
-                                    onMouseLeave={handleMouseLeave}
-                                    onFocus={handleMouseEnter}
-                                    onBlur={handleMouseLeave}
-                                    onClick={handleIconClick}
-                                    aria-label="Show error message"
-                                />
-                            </div>
+                            <ErrorIconWithOverlay
+                                id={id}
+                                showOverlay={showOverlay}
+                                locked={locked}
+                                setShowOverlay={setShowOverlay}
+                                setLocked={setLocked}
+                            />
                         )}
                     </div>
                 )}
@@ -103,7 +58,7 @@ const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
                             (props.className ? ` ${props.className}` : '')
                         }
                     />
-                    {/* Overlay error message */}
+                    {/* Overlay error message rendered over the input, not inside the icon */}
                     {errorText && showOverlay && (
                         <div
                             id={`forminput-error-overlay-${id}`}
