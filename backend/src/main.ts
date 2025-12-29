@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
+import { validationExceptionFactory } from './common/exceptions/validation.exception';
 
 async function bootstrap() {
   const logger = new ConsoleLogger({
@@ -21,7 +22,14 @@ async function bootstrap() {
     origin: 'http://localhost:5173',
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // Automatically transforms payload to DTO instance
+      whitelist: true, // Strips properties not defined in DTO
+      forbidNonWhitelisted: true, // Throws error on unexpected fields
+      exceptionFactory: validationExceptionFactory, //Custom Facotry For Validation Errors,
+    }),
+  );
   const configService = app.get(ConfigService);
 
   const host = configService.getOrThrow<string>('host');

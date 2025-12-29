@@ -24,7 +24,7 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupForm() {
     const { doSignup, loading, error } = useSignup();
-    const { register, handleSubmit, formState: { errors, isValid, isSubmitting, submitCount } } = useForm<Omit<SignupFormData, 'isPrivate'>>({
+    const { register, handleSubmit, setError, formState: { errors, isValid, isSubmitting, submitCount } } = useForm<Omit<SignupFormData, 'isPrivate'>>({
         mode: 'onChange',
         resolver: zodResolver(signupSchema),
     });
@@ -32,10 +32,23 @@ export default function SignupForm() {
     const isDisabled = !isValid || isSubmitting || loading;
 
     const onSubmit: SubmitHandler<Omit<SignupFormData, 'isPrivate'>> = async (formData) => {
-        await doSignup({
-            ...formData,
-            isPrivate: false
-        });
+        try {
+            const result = await doSignup(
+                { ...formData, isPrivate: false },
+                (serverErrors) => {
+                    console.log('Server validation errors:', serverErrors);
+                    Object.entries(serverErrors).forEach(([field, message]) => {
+                        const msg = Array.isArray(message) ? message.join('\n') : message;
+                        setError(field as keyof Omit<SignupFormData, 'isPrivate'>, { type: "server", message: msg });
+                    });
+                    // Exit early after setting errors
+                    return;
+                }
+            );
+            if (result === null) return;
+        } catch (error) {
+            // Optionally handle global errors here
+        }
     };
 
     return (
