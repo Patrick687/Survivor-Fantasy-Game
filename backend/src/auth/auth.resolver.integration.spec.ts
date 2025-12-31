@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import { JwtService } from './jwt/jwt.service';
 import request from 'supertest';
 import { PrismaService } from 'src/prisma/prisma.service';
 import clearDatabase from 'src/test/integration/utils/clearDatabase';
@@ -10,7 +11,6 @@ const signupMutation = `
   mutation Signup($input: SignupInput!) {
     signup(input: $input) {
       token
-      expiresAt
       me {
         userId
         userName
@@ -26,7 +26,6 @@ const signupMutationNoMe = `
   mutation Signup($input: SignupInput!) {
     signup(input: $input) {
       token
-      expiresAt
     }
   }
 `;
@@ -35,7 +34,6 @@ const loginMutation = `
   mutation Login($input: LoginInput!) {
     login(input: $input) {
       token
-      expiresAt
       me {
         userId
         userName
@@ -51,7 +49,6 @@ const loginMutationNoMe = `
   mutation Login($input: LoginInput!) {
     login(input: $input) {
       token
-      expiresAt
     }
   }
 `;
@@ -87,10 +84,12 @@ const testUser: SignupInput = {
 describe('AuthResolver Integration', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let jwtService: JwtService;
 
   beforeAll(async () => {
     app = await initApp();
     prisma = app.get(PrismaService);
+    jwtService = app.get(JwtService);
   });
 
   afterAll(async () => {
@@ -116,7 +115,6 @@ describe('AuthResolver Integration', () => {
       const data = response.body.data.signup;
       expect(typeof data.token).toBe('string');
       expect(data.token.length).toBeGreaterThan(10);
-      expect(data.expiresAt).toBeDefined();
       expect(data.me.userId).toBeDefined();
       expect(data.me.userName).toBe(testUser.userName);
       expect(data.me.email).toBe(testUser.email);
@@ -144,7 +142,6 @@ describe('AuthResolver Integration', () => {
       const data = response.body.data.signup;
       expect(typeof data.token).toBe('string');
       expect(data.token.length).toBeGreaterThan(10);
-      expect(data.expiresAt).toBeDefined();
       expect(data.me).toBeUndefined();
 
       // Check database
@@ -431,6 +428,91 @@ describe('AuthResolver Integration', () => {
       });
       expect(response.body.errors).toBeDefined();
       expect(response.body.data).toBeNull();
+    });
+  });
+
+  describe('VerifySession', () => {
+    let validToken: string;
+    beforeEach(async () => {
+      // Signup to get a valid token
+      const response = await sendGraphQLRequest(app, signupMutationNoMe).send({
+        query: signupMutationNoMe,
+        variables: { input: testUser },
+      });
+      validToken = response.body.data.signup.token;
+    });
+
+    it('should return authSession for a valid token', async () => {
+      const verifySessionQuery = `
+        query VerifySession($input: VerifySessionInput!) {
+          verifySession(input: $input) {
+            token
+            me {
+              userId
+              userName
+              email
+              firstName
+              lastName
+            }
+          }
+        }
+      `;
+      const response = await sendGraphQLRequest(app, verifySessionQuery).send({
+        query: verifySessionQuery,
+        variables: { input: { token: validToken } },
+      });
+      const data = response.body.data.verifySession;
+      expect(typeof data.token).toBe('string');
+      expect(data.token.length).toBeGreaterThan(10);
+      expect(data.me.userName).toBe(testUser.userName);
+      expect(data.me.email).toBe(testUser.email);
+    });
+
+    it('should fail for an invalid token', async () => {
+      const verifySessionQuery = `
+        query VerifySession($input: VerifySessionInput!) {
+          verifySession(input: $input) {
+            token
+            me {
+              userId
+            }
+          }
+        }
+      `;
+      const response = await sendGraphQLRequest(app, verifySessionQuery).send({
+        query: verifySessionQuery,
+        variables: { input: { token: 'invalid.token.value' } },
+      });
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.data).toBeNull();
+    });
+
+    it('should fail for an expired token', async () => {
+      // Temporarily override JWT_EXPIRES_IN to '1s' for this test
+      const originalExpiresIn = process.env.JWT_EXPIRES_IN;
+      process.env.JWT_EXPIRES_IN = '1s';
+      const payload = { sub: testUser.userName };
+      const token = await jwtService.signWithExpiry(payload);
+      // Restore env var
+      process.env.JWT_EXPIRES_IN = originalExpiresIn;
+      // Wait for token to expire
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+      const verifySessionQuery = `
+        query VerifySession($input: VerifySessionInput!) {
+          verifySession(input: $input) {
+            token
+            me {
+              userId
+            }
+          }
+        }
+      `;
+      const response = await sendGraphQLRequest(app, verifySessionQuery).send({
+        query: verifySessionQuery,
+        variables: { input: token },
+      });
+      expect(response.body.errors).toBeDefined();
+      expect(JSON.stringify(response.body.errors)).toContain('UNAUTHENTICATED');
     });
   });
 });

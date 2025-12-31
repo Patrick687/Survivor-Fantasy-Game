@@ -12,7 +12,6 @@ export const LOGIN_MUTATION: TypedDocumentNode<
 > = gql`
   mutation Login($input: LoginInput!) {
     login(input: $input) {
-      expiresAt
       token
       me {
         email
@@ -31,7 +30,6 @@ export const SIGNUP_MUTATION: TypedDocumentNode<
 > = gql`
   mutation Signup($input: SignupInput!) {
     signup(input: $input) {
-      expiresAt
       token
       me {
         email

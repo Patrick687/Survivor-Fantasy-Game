@@ -23,7 +23,6 @@ export type Scalars = {
 
 export type AuthSession = {
   __typename?: 'AuthSession';
-  expiresAt: Scalars['DateTime']['output'];
   me: User;
   token: Scalars['String']['output'];
 };
@@ -59,6 +58,12 @@ export type MutationSignupArgs = {
 export type Query = {
   __typename?: 'Query';
   health: HealthCheck;
+  verifySession: AuthSession;
+};
+
+
+export type QueryVerifySessionArgs = {
+  input: VerifySessionInput;
 };
 
 export type ServiceConnection = {
@@ -87,25 +92,28 @@ export type User = {
   userName: Scalars['String']['output'];
 };
 
+export type VerifySessionInput = {
+  token: Scalars['String']['input'];
+};
+
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
 
 
-export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthSession', expiresAt: any, token: string, me: { __typename?: 'User', email: string, firstName?: string | null, lastName?: string | null, userId: any, userName: string } } };
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthSession', token: string, me: { __typename?: 'User', email: string, firstName?: string | null, lastName?: string | null, userId: any, userName: string } } };
 
 export type SignupMutationVariables = Exact<{
   input: SignupInput;
 }>;
 
 
-export type SignupMutation = { __typename?: 'Mutation', signup: { __typename?: 'AuthSession', expiresAt: any, token: string, me: { __typename?: 'User', email: string, firstName?: string | null, lastName?: string | null, userId: any, userName: string } } };
+export type SignupMutation = { __typename?: 'Mutation', signup: { __typename?: 'AuthSession', token: string, me: { __typename?: 'User', email: string, firstName?: string | null, lastName?: string | null, userId: any, userName: string } } };
 
 
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
-    expiresAt
     token
     me {
       email
@@ -146,7 +154,6 @@ export type LoginMutationOptions = Apollo.BaseMutationOptions<LoginMutation, Log
 export const SignupDocument = gql`
     mutation Signup($input: SignupInput!) {
   signup(input: $input) {
-    expiresAt
     token
     me {
       email

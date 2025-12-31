@@ -44,7 +44,6 @@ describe('JwtService', () => {
       const result = await service.signWithExpiry(payload);
 
       expect(result.token).toBe('signed-token');
-      expect(result.expiresAt).toBeInstanceOf(Date);
     });
 
     it('should throw if signAsync fails', async () => {

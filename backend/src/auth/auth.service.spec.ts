@@ -41,7 +41,7 @@ describe('AuthService', () => {
         userName: 'john',
         email: 'john@example.com',
       } as any;
-      const session: AuthSession = { token: 'token', expiresAt: new Date() };
+      const session: AuthSession = { token: 'token' };
 
       (userService.createUser as jest.Mock).mockResolvedValue(user);
       (jwtService.signWithExpiry as jest.Mock).mockResolvedValue(session);
@@ -78,7 +78,7 @@ describe('AuthService', () => {
         userName: 'john',
         email: 'john@example.com',
       } as any;
-      const session: AuthSession = { token: 'token', expiresAt: new Date() };
+      const session: AuthSession = { token: 'token' };
 
       (userService.validateUserCredentials as jest.Mock).mockResolvedValue(
         user,
@@ -108,7 +108,7 @@ describe('AuthService', () => {
 
   describe('getUserFromSession', () => {
     it('should verify token and return user', async () => {
-      const session: AuthSession = { token: 'token', expiresAt: new Date() };
+      const session: AuthSession = { token: 'token' };
       const payload = { sub: '123' };
       const user: User = {
         userId: '123',
@@ -130,7 +130,7 @@ describe('AuthService', () => {
         new Error('bad token'),
       );
       await expect(
-        service.getUserFromSession({ token: 'bad', expiresAt: new Date() }),
+        service.getUserFromSession({ token: 'bad' }),
       ).rejects.toThrow('bad token');
     });
 
@@ -140,7 +140,7 @@ describe('AuthService', () => {
         new Error('not found'),
       );
       await expect(
-        service.getUserFromSession({ token: 'token', expiresAt: new Date() }),
+        service.getUserFromSession({ token: 'token' }),
       ).rejects.toThrow('not found');
     });
   });
@@ -152,7 +152,7 @@ describe('AuthService', () => {
         userName: 'john',
         email: 'john@example.com',
       } as any;
-      const session: AuthSession = { token: 'token', expiresAt: new Date() };
+      const session: AuthSession = { token: 'token' };
       (jwtService.signWithExpiry as jest.Mock).mockResolvedValue(session);
 
       // @ts-expect-error: private method

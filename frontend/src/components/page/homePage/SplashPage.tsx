@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import Button from "../ui/Button";
-import Card from "../ui/Card";
+import Button from "../../ui/Button";
+import Card from "../../ui/Card";
 
 export default function SplashPage() {
     return (

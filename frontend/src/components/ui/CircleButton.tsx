@@ -9,12 +9,17 @@ interface CircleButtonProps extends Omit<ButtonProps, "size"> {
 
 export default function CircleButton({ icon, className = "", ...props }: CircleButtonProps) {
     return (
-        <Button
+        <button
+            type="button"
+            className={`w-10 h-10 rounded-full flex items-center justify-center focus:outline-none ${className}`}
             {...props}
-            className={`rounded-full p-0 w-10 h-10 flex items-center justify-center shadow focus:outline-none focus:ring-2 focus:ring-offset-2 transition ${className}`}
-            size={undefined}
         >
-            {icon}
-        </Button>
+            {/* Make icon fill the button */}
+            {icon && (
+                <span className="w-6 h-6 flex items-center justify-center">
+                    {icon}
+                </span>
+            )}
+        </button>
     );
 }

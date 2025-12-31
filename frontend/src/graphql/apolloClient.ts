@@ -5,9 +5,14 @@ const httpLink = createHttpLink({
   credentials: 'include',
 });
 
-const client = new ApolloClient({
+const apolloClient = new ApolloClient({
   link: httpLink,
   cache: new InMemoryCache(),
+  defaultOptions: {
+    watchQuery: { errorPolicy: 'none' },
+    query: { errorPolicy: 'none' },
+    mutate: { errorPolicy: 'none' },
+  },
 });
 
-export default client;
+export default apolloClient;

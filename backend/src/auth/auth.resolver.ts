@@ -2,6 +2,7 @@ import {
   Args,
   Mutation,
   Parent,
+  Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
@@ -11,6 +12,7 @@ import { AuthService } from './auth.service';
 import { User } from 'src/user/user.entity';
 import { LoginInput } from './dto/login.input';
 import { Public } from 'src/common/decorator/public.decorator';
+import { VerifySessionInput } from './dto/verify-session.input';
 
 @Resolver(() => AuthSession)
 export class AuthResolver {
@@ -37,6 +39,14 @@ export class AuthResolver {
   @Mutation(() => AuthSession, { nullable: false, name: 'login' })
   async login(@Args('input') input: LoginInput): Promise<AuthSession> {
     return await this.authService.login(input);
+  }
+
+  @Public()
+  @Query(() => AuthSession, { nullable: false, name: 'verifySession' })
+  async verifySession(
+    @Args('input') input: VerifySessionInput,
+  ): Promise<AuthSession> {
+    return await this.authService.verifySession({ token: input.token });
   }
 
   @ResolveField(() => User, { nullable: false, name: 'me' })

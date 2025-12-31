@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService as NestJwtService } from '@nestjs/jwt';
+import { JwtService as NestJwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-type MsFunction = ((value: string) => number) &
-  ((value: number, options?: { long: boolean }) => string);
-import _ms from 'ms';
-const ms = _ms as MsFunction;
+import { JwtPayload as NestJwtPayload } from 'jsonwebtoken';
 
-type JwtPayload = {
-  sub: string; //userid
-};
+export interface JwtPayload extends NestJwtPayload {
+  sub: string; // userid
+}
 
 @Injectable()
 export class JwtService {
@@ -21,19 +18,15 @@ export class JwtService {
     return this.configService.getOrThrow<string>('JWT_SECRET');
   }
 
-  async signWithExpiry(
-    payload: JwtPayload,
-  ): Promise<{ token: string; expiresAt: Date }> {
+  async signWithExpiry(payload: JwtPayload): Promise<{ token: string }> {
     const expiresIn = this.configService.getOrThrow<string>('JWT_EXPIRES_IN');
-    const expiresMs = ms(expiresIn);
-    const expiresAt = new Date(
-      Date.now() + (typeof expiresMs === 'number' ? expiresMs : 0),
-    );
-
-    const token = await this.jwtService.signAsync(payload, {
+    // const expiresInMs = ms(expiresIn);
+    const signOptions: JwtSignOptions = {
       secret: this.getJwtSecret(),
-    });
-    return { token, expiresAt };
+      expiresIn: expiresIn as any,
+    };
+    const token = await this.jwtService.signAsync(payload, signOptions);
+    return { token };
   }
 
   async verifyAsync(token: string): Promise<JwtPayload> {

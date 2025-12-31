@@ -5,13 +5,17 @@ import App from './App.tsx';
 import { ApolloProvider } from '@apollo/client/react';
 import client from './graphql/apolloClient.ts';
 import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { store } from './store/index.ts';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <ApolloProvider client={client}>
-        <App />
-      </ApolloProvider>
+      <Provider store={store}>
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
+      </Provider>
     </BrowserRouter>
   </StrictMode>,
 );

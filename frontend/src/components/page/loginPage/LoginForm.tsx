@@ -1,12 +1,15 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
 import type { LoginInput } from "../../../graphql/generated";
-import useLogin from "../../../hooks/useLogin";
 import FormInput from "../../ui/form/FormInput";
 import FormButton from "../../ui/form/FormButton";
 import FormContainer from "../../ui/form/FormContainer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { FormError } from "../../ui/form/FormError";
+import { useDispatch, useSelector } from "react-redux";
+import { type AppDispatch, type RootState } from "../../../store";
+import { login } from "../../../store/authSlice";
+import { useNavigate } from "react-router-dom";
 
 type LoginFormData = LoginInput;
 
@@ -16,16 +19,33 @@ const loginSchema = z.object({
 });
 
 export default function LoginForm() {
-    const { doLogin, data: loginResponseData, loading: loginLoading, error: loginError } = useLogin();
+
+    const {
+        loading: loginLoading, error: loginError
+    } = useSelector((state: RootState) => state.auth);
+
+    const dispatch = useDispatch<AppDispatch>();
+
+    const navigate = useNavigate();
+
     const { register, handleSubmit, formState: { errors, isValid, isSubmitting } } = useForm<LoginFormData>({
         mode: 'onChange',
         resolver: zodResolver(loginSchema),
     });
 
-    const isDisabled = !isValid || isSubmitting || loginLoading;
+    const isDisabled = !isValid || isSubmitting;
 
     const onSubmit: SubmitHandler<LoginFormData> = async (formData) => {
-        await doLogin(formData);
+        try {
+            const loginResult = await dispatch(login(formData));
+            if (login.fulfilled.match(loginResult)) {
+                navigate('/');
+            } else if (login.rejected.match(loginResult)) {
+                console.error(loginResult);
+            }
+        } catch (error) {
+            console.error('Unrecognized Error');
+        }
     };
 
     return (

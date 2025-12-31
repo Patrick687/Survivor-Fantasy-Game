@@ -1,46 +1,13 @@
-import { configureStore, createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from './authSlice';
 
-interface AuthState {
-  isAuthenticated: boolean;
-  user: null | { id: string; email: string };
-  token: string | null;
-}
-
-const initialState: AuthState = {
-  isAuthenticated: false,
-  user: null,
-  token: null,
-};
-
-const authSlice = createSlice({
-  name: 'auth',
-  initialState,
-  reducers: {
-    loginSuccess(
-      state,
-      action: PayloadAction<{ user: AuthState['user']; token: string }>
-    ) {
-      state.isAuthenticated = true;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-    },
-    logout(state) {
-      state.isAuthenticated = false;
-      state.user = null;
-      state.token = null;
-    },
-  },
-});
-
-export const { loginSuccess, logout } = authSlice.actions;
-
-const store = configureStore({
+export const store = configureStore({
   reducer: {
-    auth: authSlice.reducer,
+    auth: authReducer,
   },
 });
 
+// Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;
+// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch;
-export default store;

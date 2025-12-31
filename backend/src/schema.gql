@@ -3,7 +3,6 @@
 # ------------------------------------------------------
 
 type AuthSession {
-  expiresAt: DateTime!
   me: User!
   token: String!
 }
@@ -31,6 +30,7 @@ type Mutation {
 
 type Query {
   health: HealthCheck!
+  verifySession(input: VerifySessionInput!): AuthSession!
 }
 
 type ServiceConnection {
@@ -60,4 +60,8 @@ type User {
   lastName: String
   userId: UUID!
   userName: String!
+}
+
+input VerifySessionInput {
+  token: String!
 }

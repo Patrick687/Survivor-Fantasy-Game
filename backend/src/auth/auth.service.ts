@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User } from 'src/user/user.entity';
 import { AuthSession } from './auth-session.entity';
 import { UserService } from 'src/user/user.service';
 import { Prisma } from '@prisma/client';
 import { JwtService } from './jwt/jwt.service';
 import { LoginInput } from './dto/login.input';
+import { VerifySessionInput } from './dto/verify-session.input';
 
 type JwtPayload = {
   sub: string;
@@ -39,15 +40,32 @@ export class AuthService {
     return await this.setupAndCreateAuthSessionForUser(user);
   }
 
+  async verifySession(input: VerifySessionInput): Promise<AuthSession> {
+    await this.jwtService
+      .verifyAsync(input.token)
+      .then((payload) => {
+        if (!payload.exp || !payload.sub) {
+          throw new UnauthorizedException('Invalid token payload.');
+        }
+        return payload;
+      })
+      .catch(() => {
+        throw new UnauthorizedException('Invalid or expired token.');
+      });
+
+    return {
+      token: input.token,
+    };
+  }
+
   private async setupAndCreateAuthSessionForUser(
     user: User,
   ): Promise<AuthSession> {
     const payload: JwtPayload = { sub: user.userId };
-    const { token, expiresAt } = await this.jwtService.signWithExpiry(payload);
+    const { token } = await this.jwtService.signWithExpiry(payload);
 
     return {
       token,
-      expiresAt,
     };
   }
 
