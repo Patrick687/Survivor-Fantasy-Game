@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nest build",
     "lint": "eslint \"src/**/*.ts\" --ignore-pattern '**/*.spec.ts' --ignore-pattern '**/*.integration.spec.ts'",
+    "typeCheck": "tsc --noEmit",
     "start:dev": "dotenv -e .env.development -- nest start --watch",
     "start:debug": "dotenv -e .env.development -- nest start --debug --watch",
     "generate:gqlschema": "dotenv -e .env.development -- ts-node --transpile-only -r tsconfig-paths/register src/main.ts",
