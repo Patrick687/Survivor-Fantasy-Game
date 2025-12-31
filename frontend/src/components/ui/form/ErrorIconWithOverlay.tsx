@@ -13,7 +13,6 @@ interface ErrorIconWithOverlayProps {
 
 const ErrorIconWithOverlay: React.FC<ErrorIconWithOverlayProps> = ({
     id,
-    showOverlay,
     locked,
     setShowOverlay,
     setLocked,

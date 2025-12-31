@@ -22,7 +22,7 @@ export default function Card({
 }: CardProps) {
     let style =
         "rounded-xl shadow-lg p-8 flex flex-col items-center transition-colors ";
-    let size = 'w-full h-full';
+    const size = 'w-full h-full';
     if (variant === "accent") {
         style +=
             "bg-dark-amethyst-100 dark:bg-dark-amethyst-800 text-dark-amethyst-700 dark:text-dark-amethyst-100";

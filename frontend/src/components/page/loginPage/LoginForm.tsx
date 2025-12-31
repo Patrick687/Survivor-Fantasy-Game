@@ -44,7 +44,7 @@ export default function LoginForm() {
                 console.error(loginResult);
             }
         } catch (error) {
-            console.error('Unrecognized Error');
+            console.error('Unrecognized Error', error);
         }
     };
 
@@ -77,7 +77,7 @@ export default function LoginForm() {
                     disabled={loginLoading}
                 />
                 <FormButton disabled={isDisabled} loading={loginLoading} padding="py-3 w-full">Login</FormButton>
-                <FormError message={loginError} loading={loginLoading} />
+                <FormError message={loginError?.message || 'Cannot parse error'} loading={loginLoading} />
             </form>
         </FormContainer>
     );

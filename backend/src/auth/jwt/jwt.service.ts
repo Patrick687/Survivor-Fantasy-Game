@@ -23,7 +23,7 @@ export class JwtService {
     // const expiresInMs = ms(expiresIn);
     const signOptions: JwtSignOptions = {
       secret: this.getJwtSecret(),
-      expiresIn: expiresIn as any,
+      expiresIn: expiresIn as any, // eslint-disable-line @typescript-eslint/no-unsafe-assignment
     };
     const token = await this.jwtService.signAsync(payload, signOptions);
     return { token };

@@ -1,5 +1,5 @@
 import React from "react";
-import Button, { type ButtonProps } from "./Button";
+import { type ButtonProps } from "./Button";
 
 interface CircleButtonProps extends Omit<ButtonProps, "size"> {
     icon: React.ReactNode;

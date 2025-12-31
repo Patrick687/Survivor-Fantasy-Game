@@ -2,7 +2,6 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { getGraphQLErrorMessage } from "../../../utils/getGraphQLErrorMessage";
 import FormInput from "../../ui/form/FormInput";
 import FormButton from "../../ui/form/FormButton";
 import FormContainer from "../../ui/form/FormContainer";
@@ -56,7 +55,7 @@ export default function SignupForm() {
     const dispatch = useDispatch<AppDispatch>();
     const { loading: signupLoading, error: signupError } = useSelector((state: RootState) => state.auth);
 
-    const { register, handleSubmit, setError, formState: { errors, isValid, isSubmitting } } = useForm<Omit<SignupFormData, 'isPrivate'>>({
+    const { register, handleSubmit, formState: { errors, isValid, isSubmitting } } = useForm<Omit<SignupFormData, 'isPrivate'>>({
         mode: 'onChange',
         resolver: zodResolver(signupSchema),
     });
@@ -64,7 +63,8 @@ export default function SignupForm() {
     const isDisabled = !isValid || isSubmitting || signupLoading;
 
     const onSubmit: SubmitHandler<Omit<SignupFormData, 'isPrivate'>> = async (formData) => {
-        const { confirmPassword, ...rest } = formData;
+        const { confirmPassword: _confirmPassword, ...rest } = formData; // eslint-disable-line @typescript-eslint/no-unused-vars
+
         try {
             const resultAction = await dispatch(signup({ ...rest, isPrivate: false }));
             if (signup.fulfilled.match(resultAction)) {
@@ -73,7 +73,7 @@ export default function SignupForm() {
                 console.error(resultAction);
             }
         } catch (error) {
-            console.error('Unrecognized Error');
+            console.error('Unrecognized Error:', error);
         }
     };
 
@@ -146,7 +146,7 @@ export default function SignupForm() {
                     disabled={signupLoading}
                 />
                 <FormButton disabled={isDisabled} loading={signupLoading} padding="py-3 w-full">Sign Up</FormButton>
-                <FormError message={signupError} loading={signupLoading} />
+                <FormError message={signupError?.message || 'Cannot parse messsage'} loading={signupLoading} />
             </form>
         </FormContainer>
     );

@@ -1,9 +1,9 @@
 import { INestApplication } from '@nestjs/common';
+import { Server } from 'http';
 import request from 'supertest';
 
 const sendGraphQLRequest = (
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  app: INestApplication,
+  app: INestApplication<Server>,
   query: string,
 ): request.Test =>
   request(app.getHttpServer()).post('/graphql').send({ query });

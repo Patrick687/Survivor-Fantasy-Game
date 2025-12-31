@@ -1,6 +1,5 @@
 // src/components/Navbar.tsx
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import Button from "./ui/Button";
 import DropdownButton from "./ui/DropdownButton";
 import DarkModeToggle from "./ui/DarkModeToggle";
@@ -40,7 +39,7 @@ export default function Navbar() {
                 ) : (
                     <DropdownButton
                         avatar={
-                            <span className="text-lg font-bold text-pacific-blue-900 dark:text-pacific-blue-100"></span>
+                            <span className="text-lg font-bold text-pacific-blue-900 dark:text-pacific-blue-100">{user!.userName.slice(0, 1).toLocaleUpperCase()}</span>
                         }
                         menu={
                             <>

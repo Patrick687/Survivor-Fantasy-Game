@@ -2,6 +2,7 @@ import {
   createAsyncThunk,
   createSlice,
   type PayloadAction,
+  type SerializedError,
 } from '@reduxjs/toolkit';
 import {
   type LoginMutation,
@@ -23,7 +24,7 @@ interface AuthState {
   user: User | null;
   isAutheticated: boolean;
   loading: boolean;
-  error: any;
+  error: SerializedError | null;
 }
 
 const initialState: AuthState = {

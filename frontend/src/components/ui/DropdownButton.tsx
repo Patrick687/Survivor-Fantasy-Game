@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState, type ReactNode } from "react";
-import Button from "./Button";
 
 interface DropdownButtonProps {
     avatar?: ReactNode;

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { CombinedGraphQLErrors } from '@apollo/client';
 import type { GraphQLError } from 'graphql';
 

@@ -45,11 +45,11 @@ export default function Button({
     padding,
     ...props
 }: ButtonProps) {
-    let base =
+    const base =
         "font-bold rounded transition shadow focus:outline-none focus:ring-2 focus:ring-offset-2 ";
     let style = "";
     // Use custom padding if provided, else default
-    let sizeClass = padding ? padding : "py-2 px-4 w-full";
+    const sizeClass = padding ? padding : "py-2 px-4 w-full";
 
     if (variant === "primary") {
         style =
