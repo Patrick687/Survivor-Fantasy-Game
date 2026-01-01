@@ -19,14 +19,16 @@ const loginSchema = z.object({
 });
 
 export default function LoginForm() {
-
     const {
-        loading: loginLoading, error: loginError
+        loading: loginLoading, error: loginError, isAutheticated
     } = useSelector((state: RootState) => state.auth);
 
     const dispatch = useDispatch<AppDispatch>();
 
     const navigate = useNavigate();
+    if (isAutheticated) {
+        navigate('/');
+    }
 
     const { register, handleSubmit, formState: { errors, isValid, isSubmitting } } = useForm<LoginFormData>({
         mode: 'onChange',
@@ -77,7 +79,7 @@ export default function LoginForm() {
                     disabled={loginLoading}
                 />
                 <FormButton disabled={isDisabled} loading={loginLoading} padding="py-3 w-full">Login</FormButton>
-                <FormError message={loginError?.message || 'Cannot parse error'} loading={loginLoading} />
+                <FormError message={loginError?.message} loading={loginLoading} />
             </form>
         </FormContainer>
     );

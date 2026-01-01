@@ -53,7 +53,11 @@ export default function SignupForm() {
 
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
-    const { loading: signupLoading, error: signupError } = useSelector((state: RootState) => state.auth);
+    const { loading: signupLoading, error: signupError, isAutheticated } = useSelector((state: RootState) => state.auth);
+    if (isAutheticated) {
+        navigate('/');
+    }
+
 
     const { register, handleSubmit, formState: { errors, isValid, isSubmitting } } = useForm<Omit<SignupFormData, 'isPrivate'>>({
         mode: 'onChange',
@@ -146,7 +150,7 @@ export default function SignupForm() {
                     disabled={signupLoading}
                 />
                 <FormButton disabled={isDisabled} loading={signupLoading} padding="py-3 w-full">Sign Up</FormButton>
-                <FormError message={signupError?.message || 'Cannot parse messsage'} loading={signupLoading} />
+                <FormError message={signupError?.message} loading={signupLoading} />
             </form>
         </FormContainer>
     );

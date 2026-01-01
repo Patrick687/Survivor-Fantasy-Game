@@ -14,7 +14,6 @@ function App() {
 
   useEffect(() => {
     dispatch(verifySession());
-    navigate('/');
   }, [dispatch, navigate]);
 
   return (
