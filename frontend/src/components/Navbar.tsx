@@ -4,8 +4,8 @@ import Button from "./ui/Button";
 import DropdownButton from "./ui/DropdownButton";
 import DarkModeToggle from "./ui/DarkModeToggle";
 import { useDispatch, useSelector } from "react-redux";
-import { type AppDispatch, type RootState } from "../store";
-import { logout as logoutViaSlice } from "../store/authSlice";
+import { type AppDispatch, type RootState } from "../app/store";
+import { logout as logoutViaSlice } from "../auth/authSlice";
 
 export default function Navbar() {
     const { isAutheticated, user } = useSelector((state: RootState) => state.auth);

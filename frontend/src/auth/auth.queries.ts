@@ -2,7 +2,7 @@ import { gql, type TypedDocumentNode } from '@apollo/client';
 import type {
   VerifySessionQuery,
   VerifySessionQueryVariables,
-} from '../generated';
+} from '../graphql/generated';
 
 export const VERIFY_SESSION_QUERY: TypedDocumentNode<
   VerifySessionQuery,

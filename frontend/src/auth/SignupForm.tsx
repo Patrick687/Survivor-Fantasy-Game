@@ -2,14 +2,14 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import FormInput from "../../ui/form/FormInput";
-import FormButton from "../../ui/form/FormButton";
-import FormContainer from "../../ui/form/FormContainer";
-import { FormError } from "../../ui/form/FormError";
 import { useDispatch, useSelector } from "react-redux";
-import { type AppDispatch, type RootState } from "../../../store";
-import { signup } from "../../../store/authSlice";
+import { signup } from "./authSlice";
 import { useNavigate } from "react-router-dom";
+import type { AppDispatch, RootState } from "../app/store";
+import FormInput from "../components/ui/form/FormInput";
+import FormContainer from "../components/ui/form/FormContainer";
+import FormButton from "../components/ui/form/FormButton";
+import { FormError } from "../components/ui/form/FormError";
 
 
 const alphaNoSpace = /^[A-Za-z]+$/;

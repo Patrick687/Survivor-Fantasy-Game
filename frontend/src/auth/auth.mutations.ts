@@ -4,7 +4,7 @@ import type {
   LoginMutationVariables,
   SignupMutation,
   SignupMutationVariables,
-} from '../generated';
+} from '../graphql/generated';
 
 export const LOGIN_MUTATION: TypedDocumentNode<
   LoginMutation,

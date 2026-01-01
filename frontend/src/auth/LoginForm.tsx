@@ -1,14 +1,14 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
-import type { LoginInput } from "../../../graphql/generated";
-import FormInput from "../../ui/form/FormInput";
-import FormButton from "../../ui/form/FormButton";
-import FormContainer from "../../ui/form/FormContainer";
+import type { LoginInput } from "../graphql/generated";
+import FormInput from "../components/ui/form/FormInput";
+import FormButton from "../components/ui/form/FormButton";
+import FormContainer from "../components/ui/form/FormContainer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { FormError } from "../../ui/form/FormError";
+import { FormError } from "../components/ui/form/FormError";
 import { useDispatch, useSelector } from "react-redux";
-import { type AppDispatch, type RootState } from "../../../store";
-import { login } from "../../../store/authSlice";
+import { type AppDispatch, type RootState } from "../app/store";
+import { login } from "./authSlice";
 import { useNavigate } from "react-router-dom";
 
 type LoginFormData = LoginInput;

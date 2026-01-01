@@ -12,14 +12,11 @@ import {
   type User,
   type Query,
 } from '../graphql/generated';
-import { SessionStorage } from './sessionStorage';
+import { SessionStorage } from '../app/sessionStorage';
 import apolloClient from '../graphql/apolloClient';
-import {
-  LOGIN_MUTATION,
-  SIGNUP_MUTATION,
-} from '../graphql/mutations/auth.mutations';
 import { getGraphQLErrorMessage } from '../utils/getGraphQLErrorMessage';
-import { VERIFY_SESSION_QUERY } from '../graphql/queries/verify-session.query';
+import { LOGIN_MUTATION, SIGNUP_MUTATION } from './auth.mutations';
+import { VERIFY_SESSION_QUERY } from './auth.queries';
 
 interface AuthState {
   token: string | null;

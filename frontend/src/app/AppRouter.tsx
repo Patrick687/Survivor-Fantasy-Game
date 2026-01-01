@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
-import LoginForm from "../components/page/loginPage/LoginForm";
-import SignupForm from "../components/page/signupPage/SignupForm";
-import HomePage from "../components/page/homePage/HomePage";
+import LoginForm from "../auth/LoginForm";
+import SignupForm from "../auth/SignupForm";
+import HomePage from "../pages/HomePage";
 
 function AppRouter() {
 

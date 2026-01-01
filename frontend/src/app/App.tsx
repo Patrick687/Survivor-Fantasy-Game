@@ -1,10 +1,10 @@
 import './App.css';
-import AppRouter from './router/AppRouter';
-import Navbar from './components/Navbar';
+import AppRouter from './AppRouter';
+import Navbar from '../components/Navbar';
 import { useDispatch } from 'react-redux';
 import { type AppDispatch } from './store';
 import { useEffect } from 'react';
-import { verifySession } from './store/authSlice';
+import { verifySession } from '../auth/authSlice';
 import { useNavigate } from 'react-router-dom';
 
 
