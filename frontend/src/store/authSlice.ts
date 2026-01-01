@@ -10,6 +10,7 @@ import {
   type SignupInput,
   type SignupMutation,
   type User,
+  type Query,
 } from '../graphql/generated';
 import { SessionStorage } from './sessionStorage';
 import apolloClient from '../graphql/apolloClient';
@@ -18,6 +19,7 @@ import {
   SIGNUP_MUTATION,
 } from '../graphql/mutations/auth.mutations';
 import { getGraphQLErrorMessage } from '../utils/getGraphQLErrorMessage';
+import { VERIFY_SESSION_QUERY } from '../graphql/queries/verify-session.query';
 
 interface AuthState {
   token: string | null;
@@ -67,6 +69,31 @@ export const login = createAsyncThunk<LoginMutation, LoginInput>(
         return thunkAPI.rejectWithValue(response.error ?? 'Unknown error');
       }
       return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        getGraphQLErrorMessage(error) ?? 'Unknown error'
+      );
+    }
+  }
+);
+
+export const verifySession = createAsyncThunk<Query['verifySession'], void>(
+  'auth/verifySession',
+  async (_, thunkAPI) => {
+    try {
+      const token = SessionStorage.getToken();
+      if (!token) {
+        return thunkAPI.rejectWithValue('No token found');
+      }
+      const response = await apolloClient.query({
+        query: VERIFY_SESSION_QUERY,
+        variables: { input: { token } },
+      });
+      console.log('verifySession response:', response);
+      if (!response.data) {
+        return thunkAPI.rejectWithValue(response.error ?? 'Unknown error');
+      }
+      return response.data.verifySession;
     } catch (error) {
       return thunkAPI.rejectWithValue(
         getGraphQLErrorMessage(error) ?? 'Unknown error'
@@ -143,6 +170,27 @@ const authSlice = createSlice({
         state.token = null;
         state.user = null;
         state.isAutheticated = false;
+      })
+      // Verify Session
+      .addCase(verifySession.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifySession.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.token = action.payload.token;
+        state.user = action.payload.me;
+        state.isAutheticated = true;
+        SessionStorage.saveToken(action.payload.token);
+      })
+      .addCase(verifySession.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? action.error;
+        state.token = null;
+        state.user = null;
+        state.isAutheticated = false;
+        SessionStorage.clearToken();
       });
   },
 });

@@ -1,34 +1,21 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]: Maybe<T[SubKey]>;
-};
-export type MakeEmpty<
-  T extends { [key: string]: unknown },
-  K extends keyof T,
-> = { [_ in K]?: never };
-export type Incremental<T> =
-  | T
-  | {
-      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
-    };
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string };
-  String: { input: string; output: string };
-  Boolean: { input: boolean; output: boolean };
-  Int: { input: number; output: number };
-  Float: { input: number; output: number };
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
   /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
-  DateTime: { input: unknown; output: unknown };
+  DateTime: { input: unknown; output: unknown; }
   /** A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier. */
-  UUID: { input: unknown; output: unknown };
+  UUID: { input: unknown; output: unknown; }
 };
 
 export type AuthSession = {
@@ -55,9 +42,11 @@ export type Mutation = {
   signup: AuthSession;
 };
 
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
+
 
 export type MutationSignupArgs = {
   input: SignupInput;
@@ -68,6 +57,7 @@ export type Query = {
   health: HealthCheck;
   verifySession: AuthSession;
 };
+
 
 export type QueryVerifySessionArgs = {
   input: VerifySessionInput;
@@ -107,36 +97,19 @@ export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
 
-export type LoginMutation = {
-  login: {
-    __typename: 'AuthSession';
-    token: string;
-    me: {
-      __typename: 'User';
-      email: string;
-      firstName: string | null;
-      lastName: string | null;
-      userId: unknown;
-      userName: string;
-    };
-  };
-};
+
+export type LoginMutation = { login: { __typename: 'AuthSession', token: string, me: { __typename: 'User', email: string, firstName: string | null, lastName: string | null, userId: unknown, userName: string } } };
 
 export type SignupMutationVariables = Exact<{
   input: SignupInput;
 }>;
 
-export type SignupMutation = {
-  signup: {
-    __typename: 'AuthSession';
-    token: string;
-    me: {
-      __typename: 'User';
-      email: string;
-      firstName: string | null;
-      lastName: string | null;
-      userId: unknown;
-      userName: string;
-    };
-  };
-};
+
+export type SignupMutation = { signup: { __typename: 'AuthSession', token: string, me: { __typename: 'User', email: string, firstName: string | null, lastName: string | null, userId: unknown, userName: string } } };
+
+export type VerifySessionQueryVariables = Exact<{
+  input: VerifySessionInput;
+}>;
+
+
+export type VerifySessionQuery = { verifySession: { __typename: 'AuthSession', token: string, me: { __typename: 'User', email: string, firstName: string | null, lastName: string | null, userId: unknown, userName: string } } };
