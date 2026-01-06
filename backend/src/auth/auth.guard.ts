@@ -10,6 +10,8 @@ import { AuthenticatedRequest } from 'src/common/express/authenticated-request.i
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from 'src/common/decorator/public.decorator';
 
+export type AuthContext = { req: AuthenticatedRequest };
+
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -27,7 +29,7 @@ export class AuthGuard implements CanActivate {
     }
 
     const ctx = GqlExecutionContext.create(context);
-    const { req } = ctx.getContext<{ req: AuthenticatedRequest }>();
+    const { req } = ctx.getContext<AuthContext>();
     const token = this.extractTokenFromHeader(req);
 
     if (!token) {

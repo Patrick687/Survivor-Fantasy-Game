@@ -7,6 +7,16 @@ type AuthSession {
   token: String!
 }
 
+input CreateLeagueInput {
+  description: String
+  name: String!
+  seasonId: Int!
+}
+
+input CreateLeagueInviteCodeInput {
+  leagueId: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -18,17 +28,59 @@ type HealthCheck {
   timestamp: DateTime
 }
 
+type League {
+  createdAt: DateTime!
+  createdBy: User!
+  description: String
+  id: String!
+  members: [LeagueMember!]!
+  name: String!
+  season: Int!
+  updatedAt: DateTime
+  updatedBy: User
+}
+
+type LeagueInviteCode {
+  code: String!
+  createdAt: DateTime!
+  createdBy: LeagueMember!
+  expiresAt: DateTime!
+  id: String!
+  league: League!
+  revokedAt: DateTime
+}
+
+type LeagueMember {
+  id: String!
+  invitedBy: LeagueMember
+  joinedAt: DateTime!
+  league: League!
+  role: LeagueRole!
+  user: User!
+}
+
+"""Roles assigned to league members"""
+enum LeagueRole {
+  ADMIN
+  MEMBER
+  OWNER
+}
+
 input LoginInput {
   password: String!
   userNameOrEmail: String!
 }
 
 type Mutation {
+  createLeague(input: CreateLeagueInput!): League!
+  createLeagueInviteCode(input: CreateLeagueInviteCodeInput!): LeagueInviteCode!
   login(input: LoginInput!): AuthSession!
   signup(input: SignupInput!): AuthSession!
+  useLeagueInviteCode(inviteCode: String!): League!
 }
 
 type Query {
+  getMyLeagues: [League!]!
   health: HealthCheck!
   verifySession(input: VerifySessionInput!): AuthSession!
 }

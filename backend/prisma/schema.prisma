@@ -15,17 +15,22 @@ datasource db {
 }
 
 model User {
-  id         String    @id @default(uuid()) @db.Uuid
-  firstName  String?   @db.VarChar(120)
-  lastName   String?   @db.VarChar(120)
-  userName   String    @unique @db.VarChar(24)
-  email      String    @unique @db.VarChar(255)
-  isPrivate  Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        String   @id @default(uuid()) @db.Uuid
+  firstName String?  @db.VarChar(120)
+  lastName  String?  @db.VarChar(120)
+  userName  String   @unique @db.VarChar(24)
+  email     String   @unique @db.VarChar(255)
+  isPrivate Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
 
-  password   Password?
-  
+  password Password?
+
+  leagueInviteCodes LeagueInviteCode[] @relation("UserLeagueInviteCodes")
+  leaguesCreated    League[]           @relation("LeagueCreatedBy")
+  leaguesUpdated    League[]           @relation("LeagueUpdatedBy")
+  leagueMembers     LeagueMember[]     @relation("LeagueMemberUser")
+
   @@index([userName])
   @@index([email])
 }
@@ -33,7 +38,77 @@ model User {
 model Password {
   id        String   @id @default(uuid()) @db.Uuid
   hash      String
-  user      User     @relation(fields: [userId], references: [id])
   userId    String   @unique @db.Uuid
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Season {
+  id           Int       @id @default(autoincrement()) 
+  name         String
+  startAirDate DateTime?
+  endAirDate   DateTime?
+  location     String
+
+  leagues League[]
+}
+
+enum LeagueRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model League {
+  id          String   @id @default(uuid()) @db.Uuid
+  seasonId    Int
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  createdById String @db.Uuid
+  updatedAt   DateTime? @updatedAt
+  updatedById String? @db.Uuid
+
+  season        Season             @relation(fields: [seasonId], references: [id])
+  createdBy     User               @relation("LeagueCreatedBy", fields: [createdById], references: [id])
+  updatedBy     User?              @relation("LeagueUpdatedBy", fields: [updatedById], references: [id])
+  leagueMembers LeagueMember[]     @relation("LeagueMemberLeague")
+  inviteCodes   LeagueInviteCode[] @relation("LeagueInviteCodeLeague")
+
+  @@index([seasonId])
+}
+
+model LeagueMember {
+  id           String   @id @default(uuid()) @db.Uuid
+  leagueId     String @db.Uuid
+  userId       String @db.Uuid
+  inviteCodeId String?  @db.Uuid
+  joinedAt     DateTime @default(now())
+
+  role       LeagueRole
+  league     League            @relation("LeagueMemberLeague", fields: [leagueId], references: [id])
+  user       User              @relation("LeagueMemberUser", fields: [userId], references: [id])
+  inviteCode LeagueInviteCode? @relation("LeagueMemberInviteCode", fields: [inviteCodeId], references: [id])
+
+  @@unique([leagueId, userId])
+  @@index([leagueId])
+  @@index([userId])
+}
+
+model LeagueInviteCode {
+  id            String         @id @default(uuid()) @db.Uuid
+  code          String         @unique @db.VarChar(32)
+  leagueId      String        @db.Uuid
+  createdAt     DateTime       @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdById   String      @db.Uuid
+  league        League         @relation("LeagueInviteCodeLeague", fields: [leagueId], references: [id])
+  createdBy     User           @relation("UserLeagueInviteCodes", fields: [createdById], references: [id])
+  leagueMembers LeagueMember[] @relation("LeagueMemberInviteCode")
+
+  @@unique([leagueId, createdById])
+  @@index([leagueId])
+  @@index([code])
 }

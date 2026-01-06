@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PasswordRepository } from './password.repository';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import clearDatabase from 'src/test/integration/utils/clearDatabase';
 
 describe('PasswordRepository (integration)', () => {
   let prisma: PrismaService;
@@ -20,14 +21,12 @@ describe('PasswordRepository (integration)', () => {
   });
 
   afterAll(async () => {
-    await prisma.password.deleteMany({});
-    await prisma.user.deleteMany({});
+    clearDatabase(prisma);
     await prisma.$disconnect();
   });
 
   beforeEach(async () => {
-    await prisma.password.deleteMany({});
-    await prisma.user.deleteMany({});
+    await clearDatabase(prisma);
   });
 
   it('should create a password record', async () => {

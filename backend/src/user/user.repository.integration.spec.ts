@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UserRepository } from './user.repository';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { v4 as uuidv4 } from 'uuid';
+import clearDatabase from 'src/test/integration/utils/clearDatabase';
 
 describe('UserRepository (integration)', () => {
   let prisma: PrismaService;
@@ -20,13 +21,11 @@ describe('UserRepository (integration)', () => {
   });
 
   beforeEach(async () => {
-    await prisma.password.deleteMany({});
-    await prisma.user.deleteMany({});
+    await clearDatabase(prisma);
   });
 
   afterAll(async () => {
-    await prisma.password.deleteMany({});
-    await prisma.user.deleteMany({});
+    await clearDatabase(prisma);
     await prisma.$disconnect();
   });
 

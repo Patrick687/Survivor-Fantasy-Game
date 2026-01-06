@@ -87,9 +87,7 @@ describe('AuthResolver Integration', () => {
   let jwtService: JwtService;
 
   beforeAll(async () => {
-    app = await initApp();
-    prisma = app.get(PrismaService);
-    jwtService = app.get(JwtService);
+    ({ app, prisma, jwtService } = await initApp());
   });
 
   afterAll(async () => {

@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { JwtModule } from './auth/jwt/jwt.module';
+import { LeagueModule } from './league/league.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { JwtModule } from './auth/jwt/jwt.module';
     HealthCheckModule,
     AuthModule,
     JwtModule,
+    LeagueModule,
   ],
   controllers: [],
   providers: [

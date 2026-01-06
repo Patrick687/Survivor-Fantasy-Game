@@ -8,6 +8,20 @@ export class PrismaService
 {
   async onModuleInit() {
     await this.$connect();
+
+    // await this.season.upsert({
+    //   where: {
+    //     id: 47,
+    //     name: 'Season 47',
+    //     location: 'Philippines',
+    //   },
+    //   update: {},
+    //   create: {
+    //     id: 47,
+    //     name: 'Season 47',
+    //     location: 'Philippines',
+    //   },
+    // });
   }
 
   async onModuleDestroy() {

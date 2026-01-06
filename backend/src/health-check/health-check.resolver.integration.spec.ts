@@ -45,8 +45,7 @@ describe('HealthCheck Integration Tests', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    app = await initApp();
-    prismaService = app.get<PrismaService>(PrismaService);
+    ({ app, prisma: prismaService } = await initApp());
   });
 
   afterAll(async () => {
