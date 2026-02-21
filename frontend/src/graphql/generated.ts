@@ -24,12 +24,63 @@ export type AuthSession = {
   token: Scalars['String']['output'];
 };
 
+export type CreateLeagueInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  seasonId: Scalars['Int']['input'];
+};
+
+export type CreateLeagueInviteCodeInput = {
+  leagueId: Scalars['String']['input'];
+};
+
 export type HealthCheck = {
   __typename: 'HealthCheck';
   services: Array<ServiceConnection>;
   status: Scalars['String']['output'];
   timestamp: Maybe<Scalars['DateTime']['output']>;
 };
+
+export type League = {
+  __typename: 'League';
+  createdAt: Scalars['DateTime']['output'];
+  createdBy: User;
+  description: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  members: Array<LeagueMember>;
+  name: Scalars['String']['output'];
+  season: Scalars['Int']['output'];
+  updatedAt: Maybe<Scalars['DateTime']['output']>;
+  updatedBy: Maybe<User>;
+};
+
+export type LeagueInviteCode = {
+  __typename: 'LeagueInviteCode';
+  code: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  createdBy: LeagueMember;
+  expiresAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  league: League;
+  revokedAt: Maybe<Scalars['DateTime']['output']>;
+};
+
+export type LeagueMember = {
+  __typename: 'LeagueMember';
+  id: Scalars['String']['output'];
+  invitedBy: Maybe<LeagueMember>;
+  joinedAt: Scalars['DateTime']['output'];
+  league: League;
+  role: LeagueRole;
+  user: User;
+};
+
+/** Roles assigned to league members */
+export enum LeagueRole {
+  Admin = 'ADMIN',
+  Member = 'MEMBER',
+  Owner = 'OWNER'
+}
 
 export type LoginInput = {
   password: Scalars['String']['input'];
@@ -38,8 +89,21 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename: 'Mutation';
+  createLeague: League;
+  createLeagueInviteCode: LeagueInviteCode;
   login: AuthSession;
   signup: AuthSession;
+  useLeagueInviteCode: League;
+};
+
+
+export type MutationCreateLeagueArgs = {
+  input: CreateLeagueInput;
+};
+
+
+export type MutationCreateLeagueInviteCodeArgs = {
+  input: CreateLeagueInviteCodeInput;
 };
 
 
@@ -52,8 +116,14 @@ export type MutationSignupArgs = {
   input: SignupInput;
 };
 
+
+export type MutationUseLeagueInviteCodeArgs = {
+  inviteCode: Scalars['String']['input'];
+};
+
 export type Query = {
   __typename: 'Query';
+  getMyLeagues: Array<League>;
   health: HealthCheck;
   verifySession: AuthSession;
 };
@@ -113,3 +183,17 @@ export type VerifySessionQueryVariables = Exact<{
 
 
 export type VerifySessionQuery = { verifySession: { __typename: 'AuthSession', token: string, me: { __typename: 'User', email: string, firstName: string | null, lastName: string | null, userId: unknown, userName: string } } };
+
+export type LeagueFieldsFragment = { __typename: 'League', id: string, name: string, description: string | null, createdAt: unknown, updatedAt: unknown | null, season: number, createdBy: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null }, members: Array<{ __typename: 'LeagueMember', id: string, joinedAt: unknown, role: LeagueRole, invitedBy: { __typename: 'LeagueMember', id: string, joinedAt: unknown, role: LeagueRole, user: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null } } | null, user: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null } }> };
+
+export type CreateLeagueMutationVariables = Exact<{
+  input: CreateLeagueInput;
+}>;
+
+
+export type CreateLeagueMutation = { createLeague: { __typename: 'League', id: string, name: string, description: string | null, createdAt: unknown, updatedAt: unknown | null, season: number, createdBy: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null }, members: Array<{ __typename: 'LeagueMember', id: string, joinedAt: unknown, role: LeagueRole, invitedBy: { __typename: 'LeagueMember', id: string, joinedAt: unknown, role: LeagueRole, user: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null } } | null, user: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null } }> } };
+
+export type GetMyLeaguesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMyLeaguesQuery = { getMyLeagues: Array<{ __typename: 'League', id: string, name: string, description: string | null, createdAt: unknown, updatedAt: unknown | null, season: number, createdBy: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null }, members: Array<{ __typename: 'LeagueMember', id: string, joinedAt: unknown, role: LeagueRole, invitedBy: { __typename: 'LeagueMember', id: string, joinedAt: unknown, role: LeagueRole, user: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null } } | null, user: { __typename: 'User', userId: unknown, userName: string, email: string, firstName: string | null, lastName: string | null } }> }> };
